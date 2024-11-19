@@ -11,6 +11,7 @@ data = json.load(f)
 # the list for gathering the submitted time
 submit_times = []
 
+failed = 0
 # loop for going over the instance and taking out their submit time
 for i in data:
     # if len(i['attempts']) == 0:
@@ -30,6 +31,12 @@ for i in data:
     # print(i['attempts'][-1]['detail'], "\n")
     # print(i['submitted_time'], "\n")
 
+    print(i['status'])
+    if i['status'] == 'Failed':
+        print('jump over')
+        failed += 1
+        continue
+        exit()
     date_obj = datetime.strptime(i['submitted_time'], date_format)
 
     # print(date_obj)
@@ -38,6 +45,7 @@ for i in data:
     # print(i['attempts'][-1]['detail'][-1]['gpus'], "\n")
     # exit()
 
+print("failed: ", failed)
 
 submit_times = np.array(submit_times)
 
@@ -47,8 +55,10 @@ df1 = pd.DataFrame(data, columns=['submitted_time'])
 
 df_sorted = df1.sort_values(by="submitted_time")
 
-# print(df_sorted)
+print(df_sorted)
 
+
+# exit()
 df_selected_day = df_sorted[(df_sorted["submitted_time"] > "2017-12-20") & (df_sorted["submitted_time"] < "2017-12-21")]
 
 # print(df_selected_day)
@@ -69,6 +79,8 @@ writer = csv.writer(f)
 
 previous = None
 for idx, row in sampled_sequenced.iterrows():
+
+    print(row)
     if previous == None:
         wait_time = 0
         previous = datetime.strptime(row[0], date_format)
