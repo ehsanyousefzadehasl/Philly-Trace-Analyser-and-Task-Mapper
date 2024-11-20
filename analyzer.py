@@ -70,7 +70,7 @@ date_format = '%Y-%m-%d %H:%M:%S'
 
 
 # taking 100 of them
-sampled_sequenced = df_selected_day.iloc[100:200, ]
+sampled_sequenced = df_selected_day.iloc[100:150, ]
 
 import csv
 f = open('philly_trace_100_tasks.csv', 'w')
