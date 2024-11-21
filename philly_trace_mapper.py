@@ -28,7 +28,6 @@ command_list1 = [
     "python submit.py --task BERT_base.rad\n",
     "python submit.py --task BERT_large.rad\n",
 
-    "python submit.py --task gpt2_xl.rad\n",
 ]
 
 command_list2 = [
