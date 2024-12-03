@@ -1,100 +1,180 @@
 sleep 0
-python submit.py --task gpt2_large_2.rad
+python src/submit.py --task workloads/mobilenet_cifar100_20e_1.rad
 sleep 73
-python submit.py --task gpt2_large_2.rad
+python src/submit.py --task workloads/efficientNet3.rad
 sleep 441
-python submit.py --task xlnet_base_cased_2.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_3.rad
 sleep 52
-python submit.py --task xlnet_large_cased_2.rad
+python src/submit.py --task workloads/resnet18_cifar100_50e_1.rad
 sleep 51
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_2.rad
 sleep 365
-python submit.py --task Xception2.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_1.rad
 sleep 18
-python submit.py --task efficientNet2.rad
+python src/submit.py --task workloads/resnet.rad
 sleep 166
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_3.rad
 sleep 439
-python submit.py --task Xception2.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_1.rad
 sleep 83
-python submit.py --task vgg.rad
+python src/submit.py --task workloads/efficientNet2.rad
 sleep 23
-python submit.py --task xlnet_large_cased_2.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_1.rad
 sleep 56
-python submit.py --task xlnet_base_cased_2.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_1.rad
 sleep 260
-python submit.py --task mobilenet3.rad
+python src/submit.py --task workloads/mobilenet_cifar100_20e_2.rad
 sleep 26
-python submit.py --task xlnet_large_cased_2.rad
+python src/submit.py --task workloads/resnet18_cifar100_50e_3.rad
 sleep 313
-python submit.py --task vgg.rad
+python src/submit.py --task workloads/vgg.rad
 sleep 17
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/xlnet_base_cased_2.rad
 sleep 301
-python submit.py --task mnist_train.rad
+python src/submit.py --task workloads/vgg2.rad
 sleep 187
-python submit.py --task BERT_base.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_2.rad
 sleep 8
-python submit.py --task efficientNet2.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_1.rad
 sleep 56
-python submit.py --task BERT_base.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_1.rad
 sleep 31
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_1.rad
 sleep 52
-python submit.py --task resnet3.rad
+python src/submit.py --task workloads/resnet18_cifar100_50e_2.rad
 sleep 84
-python submit.py --task efficientNet3.rad
+python src/submit.py --task workloads/Inception2.rad
 sleep 465
-python submit.py --task resnet3.rad
+python src/submit.py --task workloads/efficientNet_cifar100_50e_2.rad
 sleep 199
-python submit.py --task Xception.rad
+python src/submit.py --task workloads/Xception.rad
 sleep 272
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/resnet18_cifar100_50e_3.rad
 sleep 125
-python submit.py --task resnet3.rad
+python src/submit.py --task workloads/resnet3.rad
 sleep 4
-python submit.py --task efficientNet3.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_1.rad
 sleep 286
-python submit.py --task resnet3.rad
+python src/submit.py --task workloads/mobilenet_cifar100_50e_3.rad
 sleep 283
-python submit.py --task xlnet_large_cased_2.rad
+python src/submit.py --task workloads/mobilenet_cifar100_50e_1.rad
 sleep 30
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/efficientNet_cifar100_50e_2.rad
 sleep 63
-python submit.py --task Xception.rad
+python src/submit.py --task workloads/efficientNet_cifar100_20e_2.rad
 sleep 341
-python submit.py --task vgg3.rad
+python src/submit.py --task workloads/vgg2.rad
 sleep 196
-python submit.py --task resnet.rad
+python src/submit.py --task workloads/mobilenet_cifar100_20e_2.rad
 sleep 88
-python submit.py --task xlnet_base_cased_2.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_2.rad
 sleep 9
-python submit.py --task xlnet_base_cased_2.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_3.rad
 sleep 4
-python submit.py --task BERT_base.rad
+python src/submit.py --task workloads/Xception3.rad
 sleep 2
-python submit.py --task resnet3.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_2.rad
 sleep 2
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/resnet34_cifar100_20e_3.rad
 sleep 3
-python submit.py --task vgg2.rad
+python src/submit.py --task workloads/mobilenet_cifar100_50e_3.rad
 sleep 108
-python submit.py --task BERT_large.rad
+python src/submit.py --task workloads/resnet18_cifar100_50e_3.rad
 sleep 232
-python submit.py --task xlnet_large_cased_2.rad
+python src/submit.py --task workloads/Inception2.rad
 sleep 152
-python submit.py --task efficientNet3.rad
+python src/submit.py --task workloads/efficientNet_cifar100_20e_2.rad
 sleep 249
-python submit.py --task mobilenet.rad
+python src/submit.py --task workloads/mobilenet_cifar100_50e_1.rad
 sleep 52
-python submit.py --task BERT_large.rad
+python src/submit.py --task workloads/efficientNet_cifar100_20e_2.rad
 sleep 300
-python submit.py --task efficientNet3.rad
+python src/submit.py --task workloads/Inception2.rad
 sleep 419
-python submit.py --task xlnet_large_cased_2.rad
+python src/submit.py --task workloads/mobilenet_cifar100_20e_3.rad
 sleep 181
-python submit.py --task resnet2.rad
+python src/submit.py --task workloads/resnet18_cifar100_20e_2.rad
 sleep 49
-python submit.py --task vgg.rad
+python src/submit.py --task workloads/Inception.rad
 sleep 1
-python submit.py --task xlnet_large_cased_2.rad
+python src/submit.py --task workloads/BERT_base.rad
+sleep 272
+python src/submit.py --task workloads/resnet18_cifar100_50e_3.rad
+sleep 247
+python src/submit.py --task workloads/efficientNet.rad
+sleep 30
+python src/submit.py --task workloads/resnet34_cifar100_20e_1.rad
+sleep 221
+python src/submit.py --task workloads/resnet18_cifar100_50e_2.rad
+sleep 19
+python src/submit.py --task workloads/vgg.rad
+sleep 100
+python src/submit.py --task workloads/mnist_train.rad
+sleep 256
+python src/submit.py --task workloads/efficientNet_cifar100_50e_1.rad
+sleep 4
+python src/submit.py --task workloads/resnet3.rad
+sleep 589
+python src/submit.py --task workloads/xlnet_large_cased_2.rad
+sleep 11
+python src/submit.py --task workloads/resnet34_cifar100_20e_3.rad
+sleep 95
+python src/submit.py --task workloads/resnet18_cifar100_50e_1.rad
+sleep 370
+python src/submit.py --task workloads/mobilenet_cifar100_50e_1.rad
+sleep 91
+python src/submit.py --task workloads/resnet18_cifar100_20e_2.rad
+sleep 45
+python src/submit.py --task workloads/gpt2_large_2.rad
+sleep 197
+python src/submit.py --task workloads/mobilenet_cifar100_20e_3.rad
+sleep 147
+python src/submit.py --task workloads/Inception2.rad
+sleep 257
+python src/submit.py --task workloads/resnet18_cifar100_20e_3.rad
+sleep 0
+python src/submit.py --task workloads/mobilenet_cifar100_20e_1.rad
+sleep 175
+python src/submit.py --task workloads/Xception.rad
+sleep 208
+python src/submit.py --task workloads/resnet18_cifar100_20e_3.rad
+sleep 191
+python src/submit.py --task workloads/mobilenet_cifar100_20e_2.rad
+sleep 24
+python src/submit.py --task workloads/Xception.rad
+sleep 94
+python src/submit.py --task workloads/gpt2_large_2.rad
+sleep 126
+python src/submit.py --task workloads/gpt2_large_2.rad
+sleep 74
+python src/submit.py --task workloads/resnet34_cifar100_50e_2.rad
+sleep 5
+python src/submit.py --task workloads/mobilenet_cifar100_20e_1.rad
+sleep 7
+python src/submit.py --task workloads/resnet34_cifar100_20e_1.rad
+sleep 294
+python src/submit.py --task workloads/resnet18_cifar100_20e_2.rad
+sleep 394
+python src/submit.py --task workloads/BERT_large.rad
+sleep 123
+python src/submit.py --task workloads/Xception.rad
+sleep 83
+python src/submit.py --task workloads/resnet18_cifar100_50e_3.rad
+sleep 30
+python src/submit.py --task workloads/resnet2.rad
+sleep 36
+python src/submit.py --task workloads/Xception.rad
+sleep 228
+python src/submit.py --task workloads/xlnet_base_cased_2.rad
+sleep 80
+python src/submit.py --task workloads/xlnet_large_cased_2.rad
+sleep 65
+python src/submit.py --task workloads/mobilenet_cifar100_50e_3.rad
+sleep 2
+python src/submit.py --task workloads/Xception2.rad
+sleep 4
+python src/submit.py --task workloads/efficientNet.rad
+sleep 60
+python src/submit.py --task workloads/vgg.rad
+sleep 43
+python src/submit.py --task workloads/vgg2.rad

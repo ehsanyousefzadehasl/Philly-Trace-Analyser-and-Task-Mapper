@@ -1,51 +1,95 @@
 import csv
 import random
 
-# Define the two command lists
+# Define the three command lists
+# tasks less than 10 minutes
 command_list1 = [
-    "python submit.py --task Xception.rad\n",
-    "python submit.py --task Xception2.rad\n",
-    "python submit.py --task Xception3.rad\n",
+    "python src/submit.py --task workloads/efficientNet_cifar100_20e_2.rad\n",
+    "python src/submit.py --task workloads/efficientNet_cifar100_20e_3.rad\n",
 
-    "python submit.py --task vgg.rad\n",
-    "python submit.py --task vgg2.rad\n",
-    "python submit.py --task vgg3.rad\n",
+    "python src/submit.py --task workloads/resnet18_cifar100_20e_1.rad\n",
+    "python src/submit.py --task workloads/resnet18_cifar100_20e_2.rad\n",
+    "python src/submit.py --task workloads/resnet18_cifar100_20e_3.rad\n",
 
-    "python submit.py --task resnet.rad\n",
-    "python submit.py --task resnet2.rad\n",
-    "python submit.py --task resnet3.rad\n",
+    "python src/submit.py --task workloads/resnet18_cifar100_50e_3.rad\n",
 
-    "python submit.py --task mobilenet.rad\n",
-    "python submit.py --task mobilenet2.rad\n",
-    "python submit.py --task mobilenet3.rad\n",
+    "python src/submit.py --task workloads/resnet34_cifar100_20e_1.rad\n",
+    "python src/submit.py --task workloads/resnet34_cifar100_20e_2.rad\n",
+    "python src/submit.py --task workloads/resnet34_cifar100_20e_3.rad\n",
 
-    "python submit.py --task efficientNet.rad\n",
-    "python submit.py --task efficientNet2.rad\n",
-    "python submit.py --task efficientNet3.rad\n",
+    "python src/submit.py --task workloads/mobilenet_cifar100_20e_2.rad\n",
+    "python src/submit.py --task workloads/mobilenet_cifar100_20e_3.rad\n",
+]
 
-    "python submit.py --task mnist_train.rad\n",
+# tasks longer than 10 minutes and less than one hour
+command_list2 = [
+    "python src/submit.py --task workloads/efficientNet_cifar100_20e_1.rad\n",
 
-    "python submit.py --task BERT_base.rad\n",
-    "python submit.py --task BERT_large.rad\n",
+    "python src/submit.py --task workloads/efficientNet_cifar100_50e_1.rad\n",
+    "python src/submit.py --task workloads/efficientNet_cifar100_50e_2.rad\n",
+    "python src/submit.py --task workloads/efficientNet_cifar100_50e_3.rad\n",
+
+    "python src/submit.py --task workloads/resnet18_cifar100_50e_1.rad\n",
+    "python src/submit.py --task workloads/resnet18_cifar100_50e_2.rad\n",
+    
+    "python src/submit.py --task workloads/resnet34_cifar100_50e_1.rad\n",
+    "python src/submit.py --task workloads/resnet34_cifar100_50e_2.rad\n",
+    "python src/submit.py --task workloads/resnet34_cifar100_50e_3.rad\n",
+
+    "python src/submit.py --task workloads/mobilenet_cifar100_20e_1.rad\n",
+
+    "python src/submit.py --task workloads/mobilenet_cifar100_50e_1.rad\n",
+    "python src/submit.py --task workloads/mobilenet_cifar100_50e_2.rad\n",
+    "python src/submit.py --task workloads/mobilenet_cifar100_50e_3.rad\n",
+
+    "python src/submit.py --task workloads/Xception.rad\n",
+    "python src/submit.py --task workloads/Xception2.rad\n",
+    "python src/submit.py --task workloads/Xception3.rad\n",
+
+    "python src/submit.py --task workloads/Inception.rad\n",
+    "python src/submit.py --task workloads/Inception2.rad\n",
+    "python src/submit.py --task workloads/Inception3.rad\n",
+
+    "python src/submit.py --task workloads/vgg.rad\n",
+    "python src/submit.py --task workloads/vgg2.rad\n",
+    "python src/submit.py --task workloads/vgg3.rad\n",
+
+    "python src/submit.py --task workloads/resnet.rad\n",
+    "python src/submit.py --task workloads/resnet2.rad\n",
+    "python src/submit.py --task workloads/resnet3.rad\n",
+
+    "python src/submit.py --task workloads/mobilenet.rad\n",
+    "python src/submit.py --task workloads/mobilenet2.rad\n",
+    "python src/submit.py --task workloads/mobilenet3.rad\n",
+
+    "python src/submit.py --task workloads/efficientNet.rad\n",
+    "python src/submit.py --task workloads/efficientNet2.rad\n",
+    "python src/submit.py --task workloads/efficientNet3.rad\n",
+
+    "python src/submit.py --task workloads/mnist_train.rad\n",
+
+    "python src/submit.py --task workloads/BERT_base.rad\n",
+    "python src/submit.py --task workloads/BERT_large.rad\n",
 
 ]
 
-command_list2 = [
-    "python submit.py --task xlnet_base_cased_2.rad\n",
-    "python submit.py --task xlnet_large_cased_2.rad\n",
-    "python submit.py --task gpt2_large_2.rad\n",
+# tasks longer than one hour with 2-GPU demand
+command_list3 = [
+    "python src/submit.py --task workloads/xlnet_base_cased_2.rad\n",
+    "python src/submit.py --task workloads/xlnet_large_cased_2.rad\n",
+    "python src/submit.py --task workloads/gpt2_large_2.rad\n",
 ]
 
 # Input and output files
-input_csv = "philly_trace_100_tasks.csv"
+input_csv = "philly_trace_60_tasks.csv"
 output_script = "philly_scenario.sh"
 
 # Weighted random selection using random.choices
 def weighted_choice():
     # Choose between the two lists with 70% for command_list1 and 30% for command_list2
     chosen_list = random.choices(
-        [command_list1, command_list2],
-        weights=[0.7, 0.3],
+        [command_list1, command_list2, command_list3],
+        weights=[0.45, 0.45, 0.1],
         k=1
     )[0]
     return random.choice(chosen_list)

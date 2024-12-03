@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Path to your CSV file
-csv_file = "philly_trace_100_tasks.csv"
+csv_file = "philly_trace_90_tasks.csv"
 
 # Load the CSV file
 data = pd.read_csv(csv_file, header=None, names=["waiting_time", "tasks"])

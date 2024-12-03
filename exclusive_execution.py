@@ -14,14 +14,14 @@ def calculate_metrics(trace_file, task_execution_times_1, task_execution_time2, 
 
     for line in lines:
         line = line.strip()
-
         if line.startswith("sleep"):
             # Sleep command: Update the current time (convert seconds to minutes)
             sleep_time = int(line.split()[1]) / 60
             current_time += sleep_time
-        elif line.startswith("python submit.py"):
+        elif line.startswith("python src/submit.py"):
             # Extract task name and determine its execution time and GPU requirement
-            task_name = line.split("--task")[1].strip()
+            task_name = line.split("--task workloads/")[1].strip()
+            print(task_name)
             if task_name in task_execution_times_1:
                 task_time = task_execution_times_1[task_name]  # Task duration (in minutes)
                 required_gpus = 1
@@ -96,11 +96,14 @@ def analyze_and_plot_metrics(job_metrics, end_to_end_time):
     return avg_waiting_time, avg_execution_time, avg_completion_time
 
 
-# Example execution times for tasks using 1 GPU (in minutes)
+# Example execution times for tasks using 1 GPU
 task_execution_times_1 = {
     "Xception.rad": 46.86,
     "Xception2.rad": 45.77,
     "Xception3.rad": 44.44,
+    "Inception.rad": 46.86,
+    "Inception2.rad": 45.77,
+    "Inception3.rad": 44.44,
     "vgg.rad": 48.44,
     "vgg2.rad": 44.38,
     "vgg3.rad": 42.41,
@@ -117,6 +120,34 @@ task_execution_times_1 = {
     "BERT_base.rad": 14.86,
     "BERT_large.rad": 44.93,
     "gpt2_xl.rad": 30.68,
+
+    "efficientNet_cifar100_20e_1.rad": 15.332, 
+    "efficientNet_cifar100_20e_2.rad":9.6,
+    "efficientNet_cifar100_20e_3.rad":5.468,
+    "efficientNet_cifar100_50e_1.rad":38.33,
+    "efficientNet_cifar100_50e_2.rad":24,
+    "efficientNet_cifar100_50e_3.rad":13.67,
+
+    "mobilenet_cifar100_20e_1.rad":10.72577326,
+    "mobilenet_cifar100_20e_2.rad":6.441957235,
+    "mobilenet_cifar100_20e_3.rad":4.353343333,
+    "mobilenet_cifar100_50e_1.rad":26.81443314,
+    "mobilenet_cifar100_50e_2.rad":16.10489309,
+    "mobilenet_cifar100_50e_3.rad":10.88335833,
+
+    "resnet18_cifar100_20e_1.rad":6.568,
+    "resnet18_cifar100_20e_2.rad":4.4,
+    "resnet18_cifar100_20e_3.rad":3.268,
+    "resnet18_cifar100_50e_1.rad":16.42,
+    "resnet18_cifar100_50e_2.rad":11,
+    "resnet18_cifar100_50e_3.rad":8.17,
+
+    "resnet34_cifar100_20e_1.rad":9.736333333,
+    "resnet34_cifar100_20e_2.rad":6.054628372,
+    "resnet34_cifar100_20e_3.rad":4.018158833,
+    "resnet34_cifar100_50e_1.rad":24.34083333,
+    "resnet34_cifar100_50e_2.rad":15.13657093,
+    "resnet34_cifar100_50e_3.rad":10.04539708,
 }
 
 # Example execution times for tasks using 2 GPUs (in minutes)
