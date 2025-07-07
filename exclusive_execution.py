@@ -21,7 +21,7 @@ def calculate_metrics(trace_file, task_execution_times_1, task_execution_time2, 
         elif line.startswith("python src/submit.py"):
             # Extract task name and determine its execution time and GPU requirement
             task_name = line.split("--task workloads/")[1].strip()
-            print(task_name)
+            # print(task_name)
             if task_name in task_execution_times_1:
                 task_time = task_execution_times_1[task_name]  # Task duration (in minutes)
                 required_gpus = 1

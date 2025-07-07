@@ -1,5 +1,6 @@
 import csv
 import random
+import argparse
 
 # Define the three command lists
 # tasks less than 10 minutes
@@ -80,6 +81,13 @@ command_list3 = [
     "python src/submit.py --task workloads/gpt2_large_2.rad\n",
 ]
 
+
+# Argument parser for CSV input
+parser = argparse.ArgumentParser(description="Generate a job submission scenario from Philly trace.")
+parser.add_argument('--csv_file', type=str, required=True, help="Path to input CSV file (e.g., philly_trace_90_tasks.csv)")
+args = parser.parse_args()
+
+
 # Input and output files
 input_csv = "philly_trace_90_tasks.csv"
 output_script = "philly_scenario.sh"
@@ -97,7 +105,7 @@ def weighted_choice():
 # Open the output script for writing
 with open(output_script, "w") as f:
     # Open and read the CSV file
-    with open(input_csv, "r") as csv_file:
+    with open(args.csv_file, "r") as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         
         for row in csv_reader:
