@@ -26,7 +26,7 @@ df['submitted_time'] = pd.to_datetime(df['submitted_time'])
 df_sorted = df.sort_values(by="submitted_time")
 
 # Select jobs from a specific day
-start, end = pd.Timestamp("2017-12-20"), pd.Timestamp("2017-12-21")
+start, end = pd.Timestamp("2017-11-20"), pd.Timestamp("2017-11-21")
 df_selected = df_sorted[(df_sorted["submitted_time"] > start) & (df_sorted["submitted_time"] < end)]
 
 # Ensure enough samples are available

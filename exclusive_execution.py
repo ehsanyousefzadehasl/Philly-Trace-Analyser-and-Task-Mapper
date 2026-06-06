@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # Function to simulate execution times and calculate metrics
-def calculate_metrics(trace_file, task_execution_times_1, task_execution_time2, num_gpus=4):
+def calculate_metrics(trace_file, task_execution_times_1, task_execution_time2, num_gpus=3):
     # Initialize GPU timelines
     gpu_timelines = [0] * num_gpus  # Tracks when each GPU will be free
 
@@ -20,6 +20,8 @@ def calculate_metrics(trace_file, task_execution_times_1, task_execution_time2, 
             current_time += sleep_time
         elif line.startswith("python src/submit.py"):
             # Extract task name and determine its execution time and GPU requirement
+            print(line)
+            print(line.split("--task workloads/")[1].strip())
             task_name = line.split("--task workloads/")[1].strip()
             # print(task_name)
             if task_name in task_execution_times_1:
@@ -148,6 +150,10 @@ task_execution_times_1 = {
     "resnet34_cifar100_50e_1.rad":24.34083333,
     "resnet34_cifar100_50e_2.rad":15.13657093,
     "resnet34_cifar100_50e_3.rad":10.04539708,
+
+
+    "UNet.rad": 31.8,
+    "dlrm.rad":25.25,
 }
 
 # Example execution times for tasks using 2 GPUs (in minutes)
@@ -155,13 +161,14 @@ task_execution_time2 = {
     "xlnet_base_cased_2.rad": 71.59,
     "xlnet_large_cased_2.rad": 75.94,
     "gpt2_large_2.rad": 64.96,
+    "maskrcnn.rad": 112.07,
 }
 
 # Path to the trace file
-trace_file = "philly_scenario.sh"
+trace_file = "philly_scenario_philly_trace_60_tasks.csv.sh"
 
 # Calculate job metrics and end-to-end execution time
-job_metrics, end_to_end_time = calculate_metrics(trace_file, task_execution_times_1, task_execution_time2, num_gpus=4)
+job_metrics, end_to_end_time = calculate_metrics(trace_file, task_execution_times_1, task_execution_time2, num_gpus=3)
 
 # Analyze and plot metrics
 if job_metrics:
