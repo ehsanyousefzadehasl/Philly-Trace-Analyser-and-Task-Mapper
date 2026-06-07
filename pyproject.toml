@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dl-trace-mapper"
+version = "0.1.0"
+description = "Reproducible mapping of production GPU traces to profiled deep-learning workloads."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+]
+
+[project.scripts]
+trace-mapper = "trace_mapper.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
