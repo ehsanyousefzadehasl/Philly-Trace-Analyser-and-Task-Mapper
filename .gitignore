@@ -1,0 +1,10 @@
+
+# Downloaded raw production traces
+data/raw/philly/cluster_job_log
+data/raw/saturn/
+data/raw/venus/
+
+# Generated outputs
+outputs/
+*.pyc
+__pycache__/
