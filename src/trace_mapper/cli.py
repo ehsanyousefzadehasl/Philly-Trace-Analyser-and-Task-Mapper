@@ -13,7 +13,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser(
         "build-catalog",
-        help="Build a workload catalog from AEGIS solo-profiling results.",
+        help="Build a workload catalog from solo profiling results.",
     )
 
     subparsers.add_parser(
