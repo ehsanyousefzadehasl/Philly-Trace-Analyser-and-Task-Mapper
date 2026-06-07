@@ -101,11 +101,66 @@ def build_catalog(
         axis=1,
     )
 
+
+    profiles["declared_memory_requirement_mib"] = pd.to_numeric(
+        profiles.get(
+            "gpu_memory_requirement_mib",
+            pd.Series(index=profiles.index, dtype="float64"),
+        ),
+        errors="coerce",
+    )
+
+    single_peak = pd.to_numeric(
+        profiles.get(
+            "gpu_memory_peak_full_mib",
+            pd.Series(index=profiles.index, dtype="float64"),
+        ),
+        errors="coerce",
+    )
+
+    gpu_a_peak = pd.to_numeric(
+        profiles.get(
+            "gpu_memory_peak_full_mib_gpu_a",
+            pd.Series(index=profiles.index, dtype="float64"),
+        ),
+        errors="coerce",
+    )
+
+    gpu_b_peak = pd.to_numeric(
+        profiles.get(
+            "gpu_memory_peak_full_mib_gpu_b",
+            pd.Series(index=profiles.index, dtype="float64"),
+        ),
+        errors="coerce",
+    )
+
+    multi_total = pd.to_numeric(
+        profiles.get(
+            "gpu_memory_peak_full_mib_sum",
+            pd.Series(index=profiles.index, dtype="float64"),
+        ),
+        errors="coerce",
+    )
+
+    profiles["measured_peak_memory_per_gpu_mib"] = single_peak
+
+    multi_gpu = profiles["gpu_count"] > 1
+    profiles.loc[multi_gpu, "measured_peak_memory_per_gpu_mib"] = (
+        pd.concat([gpu_a_peak, gpu_b_peak], axis=1)
+        .max(axis=1, skipna=True)
+        .loc[multi_gpu]
+    )
+
+    profiles["measured_peak_memory_total_mib"] = single_peak
+    profiles.loc[multi_gpu, "measured_peak_memory_total_mib"] = (
+        multi_total.loc[multi_gpu]
+    )
+
+
     catalog = profiles.rename(
         columns={
             "gpu_count": "num_gpus",
             "end_to_end_time_s": "solo_runtime_s",
-            "gpu_memory_requirement_mib": "peak_memory_mib",
             "run_id": "source_run_id",
         }
     )[
@@ -114,8 +169,9 @@ def build_catalog(
             "task_path",
             "num_gpus",
             "solo_runtime_s",
-            "peak_memory_mib",
-            "runtime_class",
+            "declared_memory_requirement_mib",
+            "measured_peak_memory_per_gpu_mib",
+            "measured_peak_memory_total_mib",
             "source_run_id",
         ]
     ]

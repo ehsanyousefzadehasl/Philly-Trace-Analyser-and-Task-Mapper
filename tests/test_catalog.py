@@ -4,20 +4,11 @@ import unittest
 
 import pandas as pd
 
-from trace_mapper.catalog import build_catalog, runtime_class
+from trace_mapper.catalog import build_catalog
 
 
 class CatalogTests(unittest.TestCase):
-    def test_runtime_classes(self) -> None:
-        self.assertEqual(runtime_class(1, 599.0), "light")
-        self.assertEqual(runtime_class(1, 600.0), "medium_heavy")
-        self.assertEqual(runtime_class(2, 100.0), "heavy_2gpu")
-
-    def test_unsupported_gpu_count(self) -> None:
-        with self.assertRaises(ValueError):
-            runtime_class(3, 100.0)
-
-    def test_build_catalog(self) -> None:
+    def test_build_catalog_memory_semantics(self) -> None:
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             task_root = root / "project"
@@ -26,40 +17,56 @@ class CatalogTests(unittest.TestCase):
             profiles = pd.DataFrame(
                 [
                     {
-                        "workload_id": "light-job",
+                        "workload_id": "single-gpu-job",
                         "run_id": "run-1",
-                        "spec_path": str(task_root / "specs/light.yaml"),
+                        "spec_path": str(
+                            task_root / "specs/single_gpu.yaml"
+                        ),
                         "gpu_count": 1,
                         "end_to_end_time_s": 500.0,
                         "exit_code": 0,
-                        "gpu_memory_requirement_mib": 1000,
-                    },
-                    {
-                        "workload_id": "medium-job",
-                        "run_id": "run-2",
-                        "spec_path": str(task_root / "specs/medium.yaml"),
-                        "gpu_count": 1,
-                        "end_to_end_time_s": 900.0,
-                        "exit_code": 0,
-                        "gpu_memory_requirement_mib": 2000,
+                        "gpu_memory_requirement_mib": 1000.0,
+                        "gpu_memory_peak_full_mib": 1200.0,
                     },
                     {
                         "workload_id": "two-gpu-job",
-                        "run_id": "run-3",
-                        "spec_path": str(task_root / "specs/two_gpu.yaml"),
+                        "run_id": "run-2",
+                        "spec_path": str(
+                            task_root / "specs/two_gpu.yaml"
+                        ),
                         "gpu_count": 2,
                         "end_to_end_time_s": 1200.0,
                         "exit_code": 0,
-                        "gpu_memory_requirement_mib": 3000,
+                        "gpu_memory_requirement_mib": 4800.0,
+                        "gpu_memory_peak_full_mib_gpu_a": 3000.0,
+                        "gpu_memory_peak_full_mib_gpu_b": 2200.0,
+                        "gpu_memory_peak_full_mib_sum": 5200.0,
+                    },
+                    {
+                        # Represents the Llama case:
+                        # no declared requirement, but measured peak exists.
+                        "workload_id": "llama-like-job",
+                        "run_id": "run-3",
+                        "spec_path": str(
+                            task_root / "specs/llama.yaml"
+                        ),
+                        "gpu_count": 1,
+                        "end_to_end_time_s": 900.0,
+                        "exit_code": 0,
+                        "gpu_memory_requirement_mib": None,
+                        "gpu_memory_peak_full_mib": 28712.0,
                     },
                     {
                         "workload_id": "failed-job",
                         "run_id": "run-4",
-                        "spec_path": str(task_root / "specs/failed.yaml"),
+                        "spec_path": str(
+                            task_root / "specs/failed.yaml"
+                        ),
                         "gpu_count": 1,
                         "end_to_end_time_s": 100.0,
                         "exit_code": 1,
-                        "gpu_memory_requirement_mib": 500,
+                        "gpu_memory_requirement_mib": 500.0,
+                        "gpu_memory_peak_full_mib": 600.0,
                     },
                 ]
             )
@@ -71,20 +78,68 @@ class CatalogTests(unittest.TestCase):
             )
 
             self.assertEqual(len(catalog), 3)
+
             self.assertEqual(
-                catalog["runtime_class"].value_counts().to_dict(),
-                {
-                    "light": 1,
-                    "medium_heavy": 1,
-                    "heavy_2gpu": 1,
-                },
-            )
-            self.assertEqual(
-                catalog.set_index("workload_id").loc[
-                    "light-job", "task_path"
+                list(catalog.columns),
+                [
+                    "workload_id",
+                    "task_path",
+                    "num_gpus",
+                    "solo_runtime_s",
+                    "declared_memory_requirement_mib",
+                    "measured_peak_memory_per_gpu_mib",
+                    "measured_peak_memory_total_mib",
+                    "source_run_id",
                 ],
-                "specs/light.yaml",
             )
+
+            indexed = catalog.set_index("workload_id")
+
+            single = indexed.loc["single-gpu-job"]
+            self.assertEqual(single["task_path"], "specs/single_gpu.yaml")
+            self.assertEqual(single["num_gpus"], 1)
+            self.assertEqual(single["solo_runtime_s"], 500.0)
+            self.assertEqual(
+                single["declared_memory_requirement_mib"],
+                1000.0,
+            )
+            self.assertEqual(
+                single["measured_peak_memory_per_gpu_mib"],
+                1200.0,
+            )
+            self.assertEqual(
+                single["measured_peak_memory_total_mib"],
+                1200.0,
+            )
+
+            two_gpu = indexed.loc["two-gpu-job"]
+            self.assertEqual(two_gpu["num_gpus"], 2)
+            self.assertEqual(
+                two_gpu["declared_memory_requirement_mib"],
+                4800.0,
+            )
+            self.assertEqual(
+                two_gpu["measured_peak_memory_per_gpu_mib"],
+                3000.0,
+            )
+            self.assertEqual(
+                two_gpu["measured_peak_memory_total_mib"],
+                5200.0,
+            )
+
+            llama = indexed.loc["llama-like-job"]
+            self.assertTrue(
+                pd.isna(llama["declared_memory_requirement_mib"])
+            )
+            self.assertEqual(
+                llama["measured_peak_memory_per_gpu_mib"],
+                28712.0,
+            )
+            self.assertEqual(
+                llama["measured_peak_memory_total_mib"],
+                28712.0,
+            )
+
             self.assertNotIn(
                 "failed-job",
                 catalog["workload_id"].tolist(),

@@ -60,7 +60,24 @@ def main() -> int:
         catalog.to_csv(args.output, index=False)
 
         print(f"Wrote {len(catalog)} workloads to {args.output}")
-        print(catalog["runtime_class"].value_counts().to_string())
+
+        print("\nGPU-count distribution:")
+        print(
+            catalog["num_gpus"]
+            .value_counts()
+            .sort_index()
+            .to_string()
+        )
+
+        print(
+            "\nMissing declared-memory values:",
+            int(catalog["declared_memory_requirement_mib"].isna().sum()),
+        )
+        print(
+            "Missing measured peak-memory values:",
+            int(catalog["measured_peak_memory_per_gpu_mib"].isna().sum()),
+        )
+
         return 0
 
     if args.command == "generate":
