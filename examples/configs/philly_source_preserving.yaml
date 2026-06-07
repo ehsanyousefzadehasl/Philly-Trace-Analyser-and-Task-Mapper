@@ -1,0 +1,24 @@
+version: 1
+
+source:
+  format: philly
+  trace_path: examples/source_traces/philly/philly_trace_60_tasks.csv
+  cluster_name: philly
+
+mapping:
+  workload_catalog_path: outputs/workload_catalog.csv
+  seed: 42
+  num_jobs: 60
+
+  supported_gpu_counts:
+    - 1
+    - 2
+
+  gpu_demand_matching: exact
+  duration_matching: nearest_quantile
+  unsupported_gpu_policy: filter
+  preserve_arrivals: true
+
+output:
+  trace_path: outputs/philly_mapped.csv
+  manifest_path: outputs/philly_mapped.manifest.json
