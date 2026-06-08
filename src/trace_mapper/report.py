@@ -244,3 +244,263 @@ def generate_trace_report(
         "gpu_demand_path": gpu_demand_path,
         "timeline_path": timeline_path,
     }
+
+
+def generate_trace_suite_report(
+    manifest_paths: list[Path],
+    *,
+    output_dir: Path,
+) -> dict[str, Path]:
+    if not manifest_paths:
+        raise ValueError(
+            "At least one manifest is required"
+        )
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+
+    for manifest_path in manifest_paths:
+        manifest_path = manifest_path.resolve()
+
+        manifest = json.loads(
+            manifest_path.read_text(encoding="utf-8")
+        )
+
+        configuration = manifest.get(
+            "configuration",
+            {},
+        )
+        selection = manifest.get("selection", {})
+        mapping = manifest.get("mapping", {})
+        exclusive = manifest.get(
+            "exclusive_simulation"
+        )
+        output = manifest.get("output", {})
+
+        if not isinstance(exclusive, dict):
+            raise ValueError(
+                f"{manifest_path} has no exclusive simulation"
+            )
+
+        trace_path = _resolve_manifest_path(
+            manifest_path,
+            output.get("trace_path"),
+        )
+
+        if trace_path is None or not trace_path.is_file():
+            raise FileNotFoundError(
+                f"Mapped trace does not exist: {trace_path}"
+            )
+
+        trace = pd.read_csv(trace_path)
+
+        required_columns = {
+            "mapped_num_gpus",
+            "mapped_workload_id",
+        }
+        missing = required_columns - set(trace.columns)
+
+        if missing:
+            raise ValueError(
+                f"{trace_path} is missing columns: "
+                f"{sorted(missing)}"
+            )
+
+        one_gpu_jobs = int(
+            (trace["mapped_num_gpus"] == 1).sum()
+        )
+        two_gpu_jobs = int(
+            (trace["mapped_num_gpus"] == 2).sum()
+        )
+
+        rows.append(
+            {
+                "trace": str(
+                    configuration.get(
+                        "source_cluster",
+                        manifest_path.stem,
+                    )
+                ).title(),
+                "job_count": int(len(trace)),
+                "one_gpu_jobs": one_gpu_jobs,
+                "two_gpu_jobs": two_gpu_jobs,
+                "unique_workloads": int(
+                    trace["mapped_workload_id"].nunique()
+                ),
+                "arrival_span_s": float(
+                    selection.get(
+                        "selected_arrival_span_s",
+                        0.0,
+                    )
+                ),
+                "quantile_distance_mean": float(
+                    mapping.get(
+                        "runtime_quantile_distance_mean",
+                        0.0,
+                    )
+                ),
+                "quantile_distance_p95": float(
+                    mapping.get(
+                        "runtime_quantile_distance_p95",
+                        0.0,
+                    )
+                ),
+                "makespan_s": float(
+                    exclusive["makespan_s"]
+                ),
+                "waiting_mean_s": float(
+                    exclusive["waiting_mean_s"]
+                ),
+                "waiting_p95_s": float(
+                    exclusive["waiting_p95_s"]
+                ),
+                "waiting_p99_s": float(
+                    exclusive["waiting_p99_s"]
+                ),
+                "jct_mean_s": float(
+                    exclusive["jct_mean_s"]
+                ),
+                "jct_p95_s": float(
+                    exclusive["jct_p95_s"]
+                ),
+                "jct_p99_s": float(
+                    exclusive["jct_p99_s"]
+                ),
+            }
+        )
+
+    comparison = pd.DataFrame(rows).sort_values(
+        "trace",
+        kind="mergesort",
+    ).reset_index(drop=True)
+
+    comparison_csv_path = (
+        output_dir / "generated_trace_comparison.csv"
+    )
+    comparison.to_csv(
+        comparison_csv_path,
+        index=False,
+    )
+
+    makespan_path = output_dir / "exclusive_makespan.png"
+
+    figure, axis = plt.subplots(figsize=(7, 4))
+    axis.bar(
+        comparison["trace"],
+        comparison["makespan_s"] / 3600.0,
+    )
+    axis.set_xlabel("Production trace")
+    axis.set_ylabel("Estimated makespan (hours)")
+    axis.set_title(
+        "Estimated exclusive execution makespan"
+    )
+    figure.tight_layout()
+    figure.savefig(makespan_path, dpi=200)
+    plt.close(figure)
+
+    waiting_path = output_dir / "waiting_time_p95.png"
+
+    figure, axis = plt.subplots(figsize=(7, 4))
+    axis.bar(
+        comparison["trace"],
+        comparison["waiting_p95_s"] / 60.0,
+    )
+    axis.set_xlabel("Production trace")
+    axis.set_ylabel("p95 waiting time (minutes)")
+    axis.set_title(
+        "Estimated exclusive p95 waiting time"
+    )
+    figure.tight_layout()
+    figure.savefig(waiting_path, dpi=200)
+    plt.close(figure)
+
+    gpu_mix_path = output_dir / "mapped_gpu_mix.png"
+
+    figure, axis = plt.subplots(figsize=(7, 4))
+    axis.bar(
+        comparison["trace"],
+        comparison["one_gpu_jobs"],
+        label="1-GPU jobs",
+    )
+    axis.bar(
+        comparison["trace"],
+        comparison["two_gpu_jobs"],
+        bottom=comparison["one_gpu_jobs"],
+        label="2-GPU jobs",
+    )
+    axis.set_xlabel("Production trace")
+    axis.set_ylabel("Mapped jobs")
+    axis.set_title("Mapped GPU-demand composition")
+    axis.legend()
+    figure.tight_layout()
+    figure.savefig(gpu_mix_path, dpi=200)
+    plt.close(figure)
+
+    report_path = output_dir / "generated_trace_comparison.md"
+
+    lines = [
+        "# Generated Trace Comparison",
+        "",
+        "This report is generated by "
+        "`trace-mapper report-generation-suite` from the "
+        "mapped-trace manifests.",
+        "",
+        "| Trace | Jobs | 1-GPU | 2-GPU | Unique workloads | "
+        "Arrival span | Exclusive makespan | Waiting p95 | "
+        "JCT p95 | Mapping-distance p95 |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+
+    for row in comparison.to_dict(orient="records"):
+        lines.append(
+            f"| {row['trace']} | "
+            f"{row['job_count']} | "
+            f"{row['one_gpu_jobs']} | "
+            f"{row['two_gpu_jobs']} | "
+            f"{row['unique_workloads']} | "
+            f"{row['arrival_span_s'] / 3600:.2f} h | "
+            f"{row['makespan_s'] / 3600:.2f} h | "
+            f"{row['waiting_p95_s'] / 60:.2f} min | "
+            f"{row['jct_p95_s'] / 60:.2f} min | "
+            f"{row['quantile_distance_p95']:.4f} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Exclusive Makespan",
+            "",
+            "![Estimated exclusive makespan]"
+            "(exclusive_makespan.png)",
+            "",
+            "## Waiting Time",
+            "",
+            "![Estimated p95 waiting time]"
+            "(waiting_time_p95.png)",
+            "",
+            "## GPU-Demand Composition",
+            "",
+            "![Mapped GPU-demand composition]"
+            "(mapped_gpu_mix.png)",
+            "",
+            "The estimates assume arrival-order execution with "
+            "exclusive GPU allocation on the configured server. "
+            "They are intended for experiment planning rather than "
+            "as measured scheduler results.",
+            "",
+        ]
+    )
+
+    report_path.write_text(
+        "\n".join(lines),
+        encoding="utf-8",
+    )
+
+    return {
+        "report_path": report_path,
+        "comparison_csv_path": comparison_csv_path,
+        "makespan_path": makespan_path,
+        "waiting_path": waiting_path,
+        "gpu_mix_path": gpu_mix_path,
+    }

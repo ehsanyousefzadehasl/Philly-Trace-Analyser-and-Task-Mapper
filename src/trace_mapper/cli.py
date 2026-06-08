@@ -17,7 +17,10 @@ from trace_mapper.summary import (
 )
 from trace_mapper.suite import run_summary_suite
 from trace_mapper.generation import run_generation
-from trace_mapper.report import generate_trace_report
+from trace_mapper.report import (
+    generate_trace_report,
+    generate_trace_suite_report,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -133,6 +136,26 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="Optional report output directory.",
+    )
+
+    suite_report_parser = subparsers.add_parser(
+        "report-generation-suite",
+        help="Compare multiple generated trace manifests.",
+    )
+
+    suite_report_parser.add_argument(
+        "--manifests",
+        type=Path,
+        nargs="+",
+        required=True,
+        help="Generated-trace manifest JSON files.",
+    )
+
+    suite_report_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="Directory for the comparison report.",
     )
 
     return parser
@@ -309,7 +332,24 @@ def main() -> int:
         )
 
         return 0
-    
+
+    if args.command == "report-generation-suite":
+        outputs = generate_trace_suite_report(
+            args.manifests,
+            output_dir=args.output_dir,
+        )
+
+        print(
+            f"Wrote comparison report to "
+            f"{outputs['report_path']}"
+        )
+        print(
+            f"Wrote comparison CSV to "
+            f"{outputs['comparison_csv_path']}"
+        )
+
+        return 0
+
     parser.error(f"Unsupported command: {args.command}")
     return 2
 
