@@ -8,7 +8,7 @@ It supports Microsoft Philly traces, SenseTime Helios traces, workload-catalog c
 
 ```bash
 git clone https://github.com/ehsanyousefzadehasl/dl-trace-mapper.git
-cd Philly-Trace-Analyser-and-Task-Mapper
+cd dl-trace-mapper
 python -m pip install -e .
 ```
 
