@@ -1,0 +1,55 @@
+{
+  "catalog_path": "outputs/workload_catalog.csv",
+  "catalog_workload_count": 53,
+  "manifest_paths": [
+    "outputs/generated_traces/philly_seed42_60jobs.manifest.json",
+    "outputs/generated_traces/saturn_seed42_60jobs.manifest.json",
+    "outputs/generated_traces/venus_seed42_60jobs.manifest.json"
+  ],
+  "pipeline_config": "examples/configs/full_pipeline.local.yaml",
+  "root_dir": ".",
+  "validation": {
+    "available_two_gpu_workloads": [
+      "gpt2_large_wiki_bs8_2gpu",
+      "xlnet_base_cased_wiki_bs8_2gpu",
+      "xlnet_large_cased_wiki_bs4_2gpu"
+    ],
+    "errors": [],
+    "missing_two_gpu_workloads": [],
+    "passed": true,
+    "traces": [
+      {
+        "job_count": 60,
+        "maximum_gpu_fraction_deviation": 0.010091920902526773,
+        "maximum_runtime_cdf_deviation": 0.07682262046187938,
+        "representativeness_score": 0.03530073847591403,
+        "trace": "philly",
+        "two_gpu_job_count": 2,
+        "two_gpu_workload_count": 2
+      },
+      {
+        "job_count": 60,
+        "maximum_gpu_fraction_deviation": 0.03397623141568784,
+        "maximum_runtime_cdf_deviation": 0.06920545807351541,
+        "representativeness_score": 0.03989362037127882,
+        "trace": "saturn",
+        "two_gpu_job_count": 4,
+        "two_gpu_workload_count": 3
+      },
+      {
+        "job_count": 60,
+        "maximum_gpu_fraction_deviation": 0.006843848817949104,
+        "maximum_runtime_cdf_deviation": 0.08170958189027755,
+        "representativeness_score": 0.07166171405591497,
+        "trace": "venus",
+        "two_gpu_job_count": 3,
+        "two_gpu_workload_count": 3
+      }
+    ],
+    "used_two_gpu_workloads": [
+      "gpt2_large_wiki_bs8_2gpu",
+      "xlnet_base_cased_wiki_bs8_2gpu",
+      "xlnet_large_cased_wiki_bs4_2gpu"
+    ]
+  }
+}

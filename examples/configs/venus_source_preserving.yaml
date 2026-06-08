@@ -17,10 +17,17 @@ mapping:
   minimum_jobs_by_gpu_count:
     2: 1
 
+  maximum_gpu_fraction_deviation: 0.05
+  maximum_runtime_cdf_deviation: 0.10
+  
   gpu_demand_matching: exact
   duration_matching: nearest_quantile
   unsupported_gpu_policy: filter
   preserve_arrivals: true
+  selection_method: representative
+  
+
+
 
 simulation:
   enabled: true

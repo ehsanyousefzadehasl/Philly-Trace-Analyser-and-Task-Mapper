@@ -14,3 +14,6 @@ data/raw/helios/
 
 # Python packaging metadata
 *.egg-info/
+
+# Machine-specific pipeline configuration
+examples/configs/full_pipeline.local.yaml

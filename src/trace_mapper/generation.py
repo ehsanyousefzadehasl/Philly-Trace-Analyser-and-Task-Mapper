@@ -17,6 +17,10 @@ from trace_mapper.simulation import (
     simulate_exclusive_execution,
 )
 
+from trace_mapper.representative import (
+    select_representative_job_window,
+)
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
 
@@ -66,6 +70,13 @@ def run_generation(config_path: Path) -> dict[str, object]:
     catalog_path = (
         config.mapping.workload_catalog_path.resolve()
     )
+
+    maximum_gpu_fraction_deviation=(
+        config.mapping.maximum_gpu_fraction_deviation
+    ),
+    maximum_runtime_cdf_deviation=(
+        config.mapping.maximum_runtime_cdf_deviation
+    ),
 
     if not source_path.is_file():
         raise FileNotFoundError(
@@ -117,17 +128,35 @@ def run_generation(config_path: Path) -> dict[str, object]:
     if num_jobs is None:
         num_jobs = eligible_count
 
-    selected_jobs, selection_metadata = (
-        select_contiguous_job_window(
-            source_jobs,
-            num_jobs=num_jobs,
-            supported_gpu_counts=supported_gpu_counts,
-            minimum_jobs_by_gpu_count=(
-                minimum_jobs_by_gpu_count
-            ),
-            seed=config.mapping.seed,
+    if config.mapping.selection_method == "representative":
+        selected_jobs, selection_metadata = (
+            select_representative_job_window(
+                source_jobs,
+                num_jobs=num_jobs,
+                supported_gpu_counts=supported_gpu_counts,
+                minimum_jobs_by_gpu_count=(
+                    minimum_jobs_by_gpu_count
+                ),
+                maximum_gpu_fraction_deviation=(
+                    config.mapping.maximum_gpu_fraction_deviation
+                ),
+                maximum_runtime_cdf_deviation=(
+                    config.mapping.maximum_runtime_cdf_deviation
+                ),
+            )
         )
-    )
+    else:
+        selected_jobs, selection_metadata = (
+            select_contiguous_job_window(
+                source_jobs,
+                num_jobs=num_jobs,
+                supported_gpu_counts=supported_gpu_counts,
+                minimum_jobs_by_gpu_count=(
+                    minimum_jobs_by_gpu_count
+                ),
+                seed=config.mapping.seed,
+            )
+        )
 
     catalog = pd.read_csv(catalog_path)
 
@@ -245,6 +274,9 @@ def run_generation(config_path: Path) -> dict[str, object]:
             "source_format": config.source.format,
             "source_cluster": config.source.cluster_name,
             "seed": int(config.mapping.seed),
+            "selection_method": (
+                config.mapping.selection_method
+            ),
             "requested_job_count": int(num_jobs),
             "supported_gpu_counts": list(
                 supported_gpu_counts

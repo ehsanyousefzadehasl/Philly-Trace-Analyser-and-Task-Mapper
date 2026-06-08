@@ -29,12 +29,15 @@ class MappingConfig:
     workload_catalog_path: Path
     seed: int
     num_jobs: int | None
+    selection_method: str
     supported_gpu_counts: tuple[int, ...]
     gpu_demand_matching: str
     duration_matching: str
     unsupported_gpu_policy: str
     preserve_arrivals: bool
     minimum_jobs_by_gpu_count: tuple[tuple[int, int], ...]
+    maximum_gpu_fraction_deviation: float | None
+    maximum_runtime_cdf_deviation: float | None
 
 
 @dataclass(frozen=True)
@@ -199,6 +202,59 @@ def load_generation_config(path: Path) -> GenerationConfig:
                 "num_jobs"
             )
 
+    selection_method = str(
+        mapping_raw.get(
+            "selection_method",
+            "random",
+        )
+    ).strip().lower()
+
+    allowed_selection_methods = {
+        "random",
+        "representative",
+    }
+
+    if selection_method not in allowed_selection_methods:
+        raise ValueError(
+            "mapping.selection_method must be one of: "
+            f"{sorted(allowed_selection_methods)}"
+        )
+
+    maximum_gpu_fraction_deviation_raw = mapping_raw.get(
+        "maximum_gpu_fraction_deviation"
+    )
+
+    maximum_gpu_fraction_deviation = (
+        float(maximum_gpu_fraction_deviation_raw)
+        if maximum_gpu_fraction_deviation_raw is not None
+        else None
+    )
+
+    maximum_runtime_cdf_deviation_raw = mapping_raw.get(
+        "maximum_runtime_cdf_deviation"
+    )
+
+    maximum_runtime_cdf_deviation = (
+        float(maximum_runtime_cdf_deviation_raw)
+        if maximum_runtime_cdf_deviation_raw is not None
+        else None
+    )
+
+    for field_name, value in [
+        (
+            "maximum_gpu_fraction_deviation",
+            maximum_gpu_fraction_deviation,
+        ),
+        (
+            "maximum_runtime_cdf_deviation",
+            maximum_runtime_cdf_deviation,
+        ),
+    ]:
+        if value is not None and not 0.0 <= value <= 1.0:
+            raise ValueError(
+                f"mapping.{field_name} must be between 0 and 1"
+            )
+    
     simulation_raw = raw.get("simulation", {})
 
     if not isinstance(simulation_raw, dict):
@@ -240,6 +296,13 @@ def load_generation_config(path: Path) -> GenerationConfig:
             ),
             seed=int(mapping_raw.get("seed", 42)),
             num_jobs=num_jobs,
+            selection_method=selection_method,
+            maximum_gpu_fraction_deviation=(
+                maximum_gpu_fraction_deviation
+            ),
+            maximum_runtime_cdf_deviation=(
+                maximum_runtime_cdf_deviation
+            ),
             supported_gpu_counts=supported_gpu_counts,
             gpu_demand_matching=gpu_demand_matching,
             duration_matching=duration_matching,

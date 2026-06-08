@@ -1,0 +1,33 @@
+version: 1
+
+# All relative paths below are resolved from the repository root.
+root_dir: ../..
+
+catalog:
+  profiles:
+    - /path/to/solo_profile_results_1gpu.csv
+    - /path/to/solo_profile_results_2gpu.csv
+
+  task_root: /path/to/workload/project
+  output: outputs/workload_catalog.csv
+
+characterization:
+  config: examples/configs/trace_suite.yaml
+
+generation:
+  configs:
+    - examples/configs/philly_source_preserving.yaml
+    - examples/configs/saturn_source_preserving.yaml
+    - examples/configs/venus_source_preserving.yaml
+
+reports:
+  per_trace: true
+  comparison_output_dir: docs/generated_traces
+
+validation:
+  required_job_count: 60
+  require_two_gpu_job_per_trace: true
+  require_all_two_gpu_workloads_across_suite: true
+
+  maximum_gpu_fraction_deviation: 0.05
+  maximum_runtime_cdf_deviation: 0.10

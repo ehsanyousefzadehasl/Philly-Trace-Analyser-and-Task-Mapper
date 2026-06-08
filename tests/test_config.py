@@ -5,6 +5,8 @@ import unittest
 from trace_mapper.config import load_generation_config
 
 
+import json
+
 class GenerationConfigTests(unittest.TestCase):
     def test_load_valid_config(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -30,6 +32,7 @@ mapping:
   preserve_arrivals: true
   minimum_jobs_by_gpu_count:
     2: 2
+  selection_method: representative
 
 output:
   trace_path: mapped.csv
@@ -60,24 +63,54 @@ output:
             self.assertTrue(config.mapping.preserve_arrivals)
 
             self.assertEqual(
+                config.mapping.selection_method,
+                "representative",
+            )
+
+            self.assertEqual(
                 config.output.trace_path,
                 Path("mapped.csv"),
             )
 
-    def test_reject_unsupported_version(self) -> None:
+    def test_rejects_unknown_selection_method(self) -> None:
         with TemporaryDirectory() as temp_dir:
-            config_path = Path(temp_dir) / "config.yaml"
+            root = Path(temp_dir)
+            config_path = root / "config.yaml"
+
+            config = {
+                "version": 1,
+                "source": {
+                    "format": "philly",
+                    "trace_path": "trace.json",
+                    "cluster_name": "philly",
+                },
+                "mapping": {
+                    "workload_catalog_path": "catalog.csv",
+                    "seed": 42,
+                    "num_jobs": 10,
+                    "selection_method": "unknown_method",
+                    "supported_gpu_counts": [1, 2],
+                    "gpu_demand_matching": "exact",
+                    "duration_matching": "nearest_quantile",
+                    "unsupported_gpu_policy": "filter",
+                    "preserve_arrivals": True,
+                },
+                "output": {
+                    "trace_path": "mapped.csv",
+                    "manifest_path": "mapped.manifest.json",
+                },
+            }
+
             config_path.write_text(
-                "version: 2\n",
+                json.dumps(config),
                 encoding="utf-8",
             )
 
             with self.assertRaisesRegex(
                 ValueError,
-                "Unsupported configuration version",
+                "mapping.selection_method",
             ):
                 load_generation_config(config_path)
-
     def test_reject_empty_gpu_counts(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -103,7 +136,6 @@ output:
                 "supported_gpu_counts",
             ):
                 load_generation_config(config_path)
-
-
+    
 if __name__ == "__main__":
     unittest.main()

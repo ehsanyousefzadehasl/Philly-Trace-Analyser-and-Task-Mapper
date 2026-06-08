@@ -120,6 +120,7 @@ mapping:
   duration_matching: nearest_quantile
   unsupported_gpu_policy: filter
   preserve_arrivals: true
+  selection_method: representative
 
 simulation:
   enabled: true
@@ -236,5 +237,26 @@ output:
                 3,
             )
 
+            self.assertEqual(
+                manifest["configuration"]["selection_method"],
+                "representative",
+            )
+
+            self.assertEqual(
+                manifest["selection"]["selection_method"],
+                "best_representative_contiguous_eligible_window",
+            )
+
+            self.assertIn(
+                "representativeness",
+                manifest["selection"],
+            )
+
+            self.assertGreaterEqual(
+                manifest["selection"]["representativeness"][
+                    "total_score"
+                ],
+                0.0,
+            )
 if __name__ == "__main__":
     unittest.main()

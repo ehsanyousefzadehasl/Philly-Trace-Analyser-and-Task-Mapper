@@ -10,6 +10,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from trace_mapper.fidelity import (
+    generate_representative_fidelity_report,
+)
 
 def _resolve_manifest_path(
     manifest_path: Path,
@@ -497,10 +500,49 @@ def generate_trace_suite_report(
         encoding="utf-8",
     )
 
+    representative_ready = True
+
+    for manifest_path in manifest_paths:
+        manifest = json.loads(
+            manifest_path.read_text(encoding="utf-8")
+        )
+
+        representative = (
+            manifest.get("selection", {})
+            .get("representativeness")
+        )
+
+        if not isinstance(representative, dict):
+            representative_ready = False
+            break
+
+    fidelity_outputs: dict[str, Path] = {}
+
+    if representative_ready:
+        fidelity_outputs = (
+            generate_representative_fidelity_report(
+                manifest_paths,
+                output_dir=output_dir,
+            )
+        )
+
+        with report_path.open(
+            "a",
+            encoding="utf-8",
+        ) as handle:
+            handle.write(
+                "\n## Representative Fidelity\n\n"
+                "See [the representative fidelity report]"
+                "(representative_fidelity.md) for "
+                "source-versus-selected-versus-mapped "
+                "distribution comparisons.\n"
+            )
+
     return {
         "report_path": report_path,
         "comparison_csv_path": comparison_csv_path,
         "makespan_path": makespan_path,
         "waiting_path": waiting_path,
         "gpu_mix_path": gpu_mix_path,
+        "fidelity_outputs": fidelity_outputs,
     }

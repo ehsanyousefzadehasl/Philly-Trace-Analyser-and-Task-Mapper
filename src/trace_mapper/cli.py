@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import argparse
-
-from pathlib import Path
-
-from trace_mapper.catalog import build_catalog
 import json
 from pathlib import Path
 
+from trace_mapper.catalog import build_catalog
 from trace_mapper.sources.helios import load_helios_jobs
 from trace_mapper.sources.philly import load_philly_jobs
 from trace_mapper.summary import (
@@ -22,6 +19,7 @@ from trace_mapper.report import (
     generate_trace_suite_report,
 )
 
+from trace_mapper.pipeline import run_pipeline
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -157,6 +155,22 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Directory for the comparison report.",
     )
+
+    pipeline_parser = subparsers.add_parser(
+        "run-pipeline",
+        help=(
+            "Build the catalog, generate representative traces, "
+            "create reports, and validate outputs."
+        ),
+    )
+
+    pipeline_parser.add_argument(
+        "--config",
+        type=Path,
+        required=True,
+        help="Full pipeline YAML configuration.",
+    )
+
 
     return parser
 
@@ -347,6 +361,21 @@ def main() -> int:
             f"Wrote comparison CSV to "
             f"{outputs['comparison_csv_path']}"
         )
+
+        return 0
+
+    if args.command == "run-pipeline":
+        outputs = run_pipeline(args.config)
+
+        print(
+            f"Wrote workload catalog to "
+            f"{outputs['catalog_path']}"
+        )
+        print(
+            f"Wrote pipeline summary to "
+            f"{outputs['pipeline_summary_path']}"
+        )
+        print("Pipeline validation: OK")
 
         return 0
 
