@@ -1,0 +1,31 @@
+version: 1
+
+source:
+  format: helios
+  trace_path: data/raw/helios/venus/cluster_log.csv
+  cluster_name: venus
+
+mapping:
+  workload_catalog_path: outputs/workload_catalog.csv
+  seed: 42
+  num_jobs: 60
+
+  supported_gpu_counts:
+    - 1
+    - 2
+
+  minimum_jobs_by_gpu_count:
+    2: 1
+
+  gpu_demand_matching: exact
+  duration_matching: nearest_quantile
+  unsupported_gpu_policy: filter
+  preserve_arrivals: true
+
+simulation:
+  enabled: true
+  server_gpu_count: 3
+
+output:
+  trace_path: outputs/generated_traces/venus_seed42_60jobs.csv
+  manifest_path: outputs/generated_traces/venus_seed42_60jobs.manifest.json
