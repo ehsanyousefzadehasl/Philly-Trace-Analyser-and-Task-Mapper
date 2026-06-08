@@ -14,6 +14,9 @@ mapping:
     - 1
     - 2
 
+  minimum_jobs_by_gpu_count:
+    2: 2
+
   gpu_demand_matching: exact
   duration_matching: nearest_quantile
   unsupported_gpu_policy: filter

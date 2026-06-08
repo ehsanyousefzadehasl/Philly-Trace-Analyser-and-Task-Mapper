@@ -130,6 +130,48 @@ class SourceWindowSelectionTests(unittest.TestCase):
                 seed=42,
             )
 
+def test_enforces_minimum_gpu_demand_coverage(self) -> None:
+    window, metadata = select_contiguous_job_window(
+        self.jobs,
+        num_jobs=3,
+        supported_gpu_counts=(1, 2),
+        minimum_jobs_by_gpu_count={2: 1},
+        seed=42,
+    )
+
+    counts = (
+        window["source_num_gpus"]
+        .value_counts()
+        .to_dict()
+    )
+
+    self.assertGreaterEqual(counts.get(2, 0), 1)
+    self.assertEqual(
+        metadata["minimum_jobs_by_gpu_count"],
+        {"2": 1},
+    )
+    self.assertGreater(
+        metadata["candidate_window_count"],
+        0,
+    )
+
+
+def test_rejects_impossible_gpu_coverage(self) -> None:
+    one_gpu_only = self.jobs.loc[
+        self.jobs["source_num_gpus"] == 1
+    ]
+
+    with self.assertRaisesRegex(
+        ValueError,
+        "No contiguous eligible window satisfies",
+    ):
+        select_contiguous_job_window(
+            one_gpu_only,
+            num_jobs=2,
+            supported_gpu_counts=(1, 2),
+            minimum_jobs_by_gpu_count={2: 1},
+            seed=42,
+        )
 
 if __name__ == "__main__":
     unittest.main()

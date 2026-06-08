@@ -92,6 +92,10 @@ def run_generation(config_path: Path) -> dict[str, object]:
         config.mapping.supported_gpu_counts
     )
 
+    minimum_jobs_by_gpu_count = dict(
+        config.mapping.minimum_jobs_by_gpu_count
+    )
+
     supported_mask = source_jobs[
         "source_num_gpus"
     ].isin(supported_gpu_counts)
@@ -118,6 +122,9 @@ def run_generation(config_path: Path) -> dict[str, object]:
             source_jobs,
             num_jobs=num_jobs,
             supported_gpu_counts=supported_gpu_counts,
+            minimum_jobs_by_gpu_count=(
+                minimum_jobs_by_gpu_count
+            ),
             seed=config.mapping.seed,
         )
     )
@@ -242,6 +249,12 @@ def run_generation(config_path: Path) -> dict[str, object]:
             "supported_gpu_counts": list(
                 supported_gpu_counts
             ),
+            "minimum_jobs_by_gpu_count": {
+                str(key): int(value)
+                for key, value in sorted(
+                    minimum_jobs_by_gpu_count.items()
+                )
+            },
             "gpu_demand_matching": (
                 config.mapping.gpu_demand_matching
             ),

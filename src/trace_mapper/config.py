@@ -34,6 +34,7 @@ class MappingConfig:
     duration_matching: str
     unsupported_gpu_policy: str
     preserve_arrivals: bool
+    minimum_jobs_by_gpu_count: tuple[tuple[int, int], ...]
 
 
 @dataclass(frozen=True)
@@ -140,6 +141,43 @@ def load_generation_config(path: Path) -> GenerationConfig:
             "supported_gpu_counts must contain positive integers"
         )
 
+    minimum_jobs_raw = mapping_raw.get(
+        "minimum_jobs_by_gpu_count",
+        {},
+    )
+
+    if not isinstance(minimum_jobs_raw, dict):
+        raise ValueError(
+            "minimum_jobs_by_gpu_count must be a mapping"
+        )
+
+    minimum_jobs_by_gpu_count: dict[int, int] = {}
+
+    for gpu_count_raw, minimum_raw in minimum_jobs_raw.items():
+        gpu_count = int(gpu_count_raw)
+        minimum = int(minimum_raw)
+
+        if gpu_count <= 0:
+            raise ValueError(
+                "minimum_jobs_by_gpu_count keys must be "
+                "positive GPU counts"
+            )
+
+        if minimum < 0:
+            raise ValueError(
+                "minimum_jobs_by_gpu_count values must be "
+                "nonnegative"
+            )
+
+        if gpu_count not in supported_gpu_counts:
+            raise ValueError(
+                "minimum_jobs_by_gpu_count contains an "
+                f"unsupported GPU count: {gpu_count}"
+            )
+
+        if minimum > 0:
+            minimum_jobs_by_gpu_count[gpu_count] = minimum
+
     num_jobs_raw = mapping_raw.get("num_jobs")
     num_jobs = (
         None
@@ -148,6 +186,18 @@ def load_generation_config(path: Path) -> GenerationConfig:
     )
     if num_jobs is not None and num_jobs <= 0:
         raise ValueError("num_jobs must be positive when provided")
+
+
+    if num_jobs is not None:
+        total_minimum_jobs = sum(
+            minimum_jobs_by_gpu_count.values()
+        )
+
+        if total_minimum_jobs > num_jobs:
+            raise ValueError(
+                "The sum of minimum_jobs_by_gpu_count exceeds "
+                "num_jobs"
+            )
 
     simulation_raw = raw.get("simulation", {})
 
@@ -196,6 +246,9 @@ def load_generation_config(path: Path) -> GenerationConfig:
             unsupported_gpu_policy=unsupported_gpu_policy,
             preserve_arrivals=bool(
                 mapping_raw.get("preserve_arrivals", True)
+            ),
+            minimum_jobs_by_gpu_count=tuple(
+                sorted(minimum_jobs_by_gpu_count.items())
             ),
         ),
         output=OutputConfig(
