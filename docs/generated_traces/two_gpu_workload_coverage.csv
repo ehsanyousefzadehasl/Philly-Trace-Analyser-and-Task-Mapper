@@ -1,4 +1,4 @@
 workload_id,covered,trace_count,traces
 gpt2_large_wiki_bs8_2gpu,True,3,"Philly,Saturn,Venus"
-xlnet_base_cased_wiki_bs8_2gpu,True,1,Saturn
+xlnet_base_cased_wiki_bs8_2gpu,True,2,"Saturn,Venus"
 xlnet_large_cased_wiki_bs4_2gpu,True,3,"Philly,Saturn,Venus"

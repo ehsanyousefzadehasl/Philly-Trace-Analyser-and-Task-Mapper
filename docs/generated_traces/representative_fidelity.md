@@ -8,7 +8,7 @@ This report compares each full eligible production population, selected source w
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Philly | 0.0353 | 1.01% | 3.48% | 7.68% | 16.02% | 2 | 2 |
 | Saturn | 0.0399 | 3.40% | 3.60% | 6.92% | 43.31% | 4 | 3 |
-| Venus | 0.0557 | 2.35% | 5.07% | 11.83% | 36.50% | 2 | 2 |
+| Venus | 0.0717 | 0.68% | 5.10% | 8.17% | 36.50% | 3 | 3 |
 
 ## GPU-Demand Fidelity
 
@@ -31,7 +31,7 @@ This report compares each full eligible production population, selected source w
 | Workload | Covered | Traces |
 |---|---:|---|
 | gpt2_large_wiki_bs8_2gpu | Yes | Philly,Saturn,Venus |
-| xlnet_base_cased_wiki_bs8_2gpu | Yes | Saturn |
+| xlnet_base_cased_wiki_bs8_2gpu | Yes | Saturn,Venus |
 | xlnet_large_cased_wiki_bs4_2gpu | Yes | Philly,Saturn,Venus |
 
 Selected-window fidelity is evaluated against the corresponding completed 1–2 GPU source population. Mapped-runtime differences are reported separately because the executable workload catalog may have a narrower runtime range than the production trace.

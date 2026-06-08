@@ -92,3 +92,51 @@ python -m compileall -q src tests
 ## Scope
 
 The included configurations target server-level experiments with 1-GPU and 2-GPU jobs. Larger GPU demands can be enabled when the workload catalog and target testbed support them. Exclusive-execution results are planning estimates, not measured scheduler outcomes.
+
+
+## One-Command Workflow
+
+Copy the public pipeline template to a machine-specific local configuration:
+
+```bash
+cp \
+  examples/configs/full_pipeline.example.yaml \
+  examples/configs/full_pipeline.local.yaml
+```
+
+Edit `examples/configs/full_pipeline.local.yaml` and set:
+
+- the one-GPU and two-GPU solo-profile CSV paths;
+- the workload project root;
+- any machine-specific input paths.
+
+Then run the complete workflow:
+
+```bash
+trace-mapper run-pipeline \
+  --config examples/configs/full_pipeline.local.yaml
+```
+
+The pipeline:
+
+1. builds the workload catalog from solo profiling results;
+2. characterizes the configured production traces;
+3. selects representative Philly, Saturn, and Venus windows;
+4. maps source jobs to executable workloads;
+5. generates per-trace and cross-trace reports;
+6. creates fidelity figures and machine-readable CSV artifacts;
+7. validates job count, runtime-CDF fidelity, GPU-demand fidelity, and 2-GPU workload coverage.
+
+The local pipeline configuration is intentionally ignored by Git because it may contain machine-specific absolute paths. Commit only `examples/configs/full_pipeline.example.yaml`.
+
+## Trace Evaluation Evidence
+
+The generated documentation exposes the complete evidence chain used to validate the traces:
+
+- [Production trace characterization](docs/trace_characterization.md)
+- [Generated trace comparison](docs/generated_traces/generated_trace_comparison.md)
+- [Representative trace fidelity](docs/generated_traces/representative_fidelity.md)
+- [Pipeline validation summary](docs/generated_traces/pipeline_summary.json)
+- [Raw trace sources and citations](data/README.md)
+
+The fidelity report compares each full eligible source population with its selected 60-job window and mapped executable trace. It reports GPU-demand proportions, runtime-CDF buckets, interarrival behavior, representativeness scores, and suite-level coverage of the available 2-GPU workloads.

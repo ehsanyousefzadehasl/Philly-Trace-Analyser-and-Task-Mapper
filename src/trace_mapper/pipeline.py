@@ -52,6 +52,22 @@ def _resolve_path(root_dir: Path, value: str | Path) -> Path:
     return (root_dir / path).resolve()
 
 
+def _portable_path(
+    path: Path,
+    *,
+    root_dir: Path,
+) -> str:
+    resolved_path = path.resolve()
+    resolved_root = root_dir.resolve()
+
+    try:
+        return resolved_path.relative_to(
+            resolved_root
+        ).as_posix()
+    except ValueError:
+        return resolved_path.name
+    
+
 def load_pipeline_config(config_path: Path) -> dict[str, Any]:
     config_path = config_path.resolve()
 
@@ -503,14 +519,22 @@ def run_pipeline(config_path: Path) -> dict[str, Any]:
     )
 
     pipeline_summary = {
-        "pipeline_config": str(
-            config["config_path"]
+        "pipeline_config": _portable_path(
+            config["config_path"],
+            root_dir=root_dir,
         ),
-        "root_dir": str(root_dir),
-        "catalog_path": str(catalog_path),
+        "root_dir": ".",
+        "catalog_path": _portable_path(
+            catalog_path,
+            root_dir=root_dir,
+        ),
         "catalog_workload_count": int(len(catalog)),
         "manifest_paths": [
-            str(path) for path in manifest_paths
+            _portable_path(
+                path,
+                root_dir=root_dir,
+            )
+            for path in manifest_paths
         ],
         "validation": validation_result,
     }
