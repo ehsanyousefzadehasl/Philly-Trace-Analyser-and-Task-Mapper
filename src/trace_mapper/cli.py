@@ -15,10 +15,10 @@ from trace_mapper.summary import (
     summarize_source_jobs,
     write_source_summary_artifacts,
 )
-
 from trace_mapper.suite import run_summary_suite
-
 from trace_mapper.generation import run_generation
+from trace_mapper.report import generate_trace_report
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -115,6 +115,26 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Path to the trace-suite YAML configuration.",
     )
+
+    report_parser = subparsers.add_parser(
+        "report-generation",
+        help="Generate figures and Markdown for a mapped trace.",
+    )
+
+    report_parser.add_argument(
+        "--manifest",
+        type=Path,
+        required=True,
+        help="Mapped-trace manifest JSON.",
+    )
+
+    report_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Optional report output directory.",
+    )
+
     return parser
 
 def load_source_jobs(
@@ -271,10 +291,27 @@ def main() -> int:
         )
 
         return 0
+    
+    if args.command == "report-generation":
+        outputs = generate_trace_report(
+            args.manifest,
+            output_dir=args.output_dir,
+        )
 
+        print(f"Wrote report to {outputs['report_path']}")
+        print(
+            f"Wrote GPU-demand figure to "
+            f"{outputs['gpu_demand_path']}"
+        )
+        print(
+            f"Wrote execution-time figure to "
+            f"{outputs['timeline_path']}"
+        )
+
+        return 0
+    
     parser.error(f"Unsupported command: {args.command}")
     return 2
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
