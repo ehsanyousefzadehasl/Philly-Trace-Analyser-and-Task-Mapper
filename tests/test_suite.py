@@ -101,6 +101,19 @@ output:
                 outputs["suite_csv_path"]
             )
 
+            self.assertTrue(
+                outputs["coverage_path"].is_file()
+            )
+            self.assertTrue(
+                outputs["gpu_mix_path"].is_file()
+            )
+            self.assertTrue(
+                outputs["runtime_path"].is_file()
+            )
+            self.assertTrue(
+                outputs["queue_path"].is_file()
+            )
+
             self.assertEqual(len(suite), 2)
             self.assertEqual(
                 set(suite["source_cluster"]),
@@ -114,6 +127,15 @@ output:
             self.assertIn("Philly", report)
             self.assertIn("Saturn", report)
 
+            
+            self.assertIn(
+                "trace_characterization/supported_coverage.png",
+                report,
+            )
+            self.assertIn(
+                "trace_characterization/gpu_demand_mix.png",
+                report,
+            )
 
 if __name__ == "__main__":
     unittest.main()
