@@ -8,3 +8,6 @@ data/raw/venus/
 outputs/
 *.pyc
 __pycache__/
+
+# Downloaded SenseTime Helios production traces
+data/raw/helios/
