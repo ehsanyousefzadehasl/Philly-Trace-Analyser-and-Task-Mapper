@@ -426,9 +426,13 @@ def select_representative_job_window(
         kind="mergesort",
     ).reset_index(drop=True)
 
-    eligible = jobs.loc[
-        jobs["source_num_gpus"].isin(supported_counts)
-    ].copy()
+    eligible = (
+        jobs.loc[
+            jobs["source_num_gpus"].isin(supported_counts)
+        ]
+        .copy()
+        .reset_index(drop=True)
+    )
 
     if len(eligible) < num_jobs:
         raise ValueError(
