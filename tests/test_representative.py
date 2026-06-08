@@ -5,6 +5,7 @@ import pandas as pd
 from trace_mapper.representative import (
     build_representativeness_profile,
     score_representativeness,
+    select_representative_job_window,
 )
 
 
@@ -162,6 +163,160 @@ class RepresentativeProfileTests(unittest.TestCase):
             0.0,
         )
 
+class RepresentativeWindowSelectionTests(
+    unittest.TestCase
+):
+    def test_selects_best_matching_window(self) -> None:
+        rows = []
 
+        durations = [
+            100,
+            200,
+            700,
+            800,
+            4000,
+            5000,
+            100,
+            200,
+            700,
+            800,
+            4000,
+            5000,
+        ]
+
+        gpu_counts = [
+            1,
+            1,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            1,
+            1,
+        ]
+
+        submit_times = [
+            0,
+            10,
+            20,
+            30,
+            40,
+            50,
+            200,
+            210,
+            220,
+            230,
+            240,
+            250,
+        ]
+
+        for index, (
+            duration,
+            gpu_count,
+            submit_time,
+        ) in enumerate(
+            zip(
+                durations,
+                gpu_counts,
+                submit_times,
+            )
+        ):
+            rows.append(
+                {
+                    "source_job_id": f"job-{index}",
+                    "source_duration_s": duration,
+                    "source_num_gpus": gpu_count,
+                    "submit_time_s": submit_time,
+                    "source_interarrival_s": (
+                        0.0
+                        if index == 0
+                        else submit_time
+                        - submit_times[index - 1]
+                    ),
+                }
+            )
+
+        jobs = pd.DataFrame(rows)
+
+        window, metadata = (
+            select_representative_job_window(
+                jobs,
+                num_jobs=6,
+                supported_gpu_counts=(1, 2),
+                minimum_jobs_by_gpu_count={2: 1},
+            )
+        )
+
+        self.assertEqual(len(window), 6)
+        self.assertGreaterEqual(
+            int(
+                (
+                    window["source_num_gpus"] == 2
+                ).sum()
+            ),
+            1,
+        )
+
+        self.assertEqual(
+            metadata["selection_method"],
+            (
+                "best_representative_contiguous_"
+                "eligible_window"
+            ),
+        )
+
+        self.assertGreater(
+            metadata["candidate_window_count"],
+            0,
+        )
+
+        self.assertGreaterEqual(
+            metadata["representativeness"][
+                "total_score"
+            ],
+            0.0,
+        )
+
+        self.assertEqual(
+            window.iloc[0]["submit_time_s"],
+            0.0,
+        )
+
+    def test_rejects_impossible_minimum(self) -> None:
+        jobs = pd.DataFrame(
+            [
+                {
+                    "source_job_id": "job-1",
+                    "source_duration_s": 100.0,
+                    "source_num_gpus": 1,
+                    "submit_time_s": 0.0,
+                    "source_interarrival_s": 0.0,
+                },
+                {
+                    "source_job_id": "job-2",
+                    "source_duration_s": 200.0,
+                    "source_num_gpus": 1,
+                    "submit_time_s": 10.0,
+                    "source_interarrival_s": 10.0,
+                },
+            ]
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "No representative window satisfies",
+        ):
+            select_representative_job_window(
+                jobs,
+                num_jobs=2,
+                supported_gpu_counts=(1, 2),
+                minimum_jobs_by_gpu_count={2: 1},
+            )
+
+            
 if __name__ == "__main__":
     unittest.main()
