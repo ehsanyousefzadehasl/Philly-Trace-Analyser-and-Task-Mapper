@@ -13,7 +13,11 @@ from trace_mapper.sources.philly import load_philly_jobs
 from trace_mapper.summary import (
     gpu_demand_distribution,
     summarize_source_jobs,
+    write_source_summary_artifacts,
 )
+
+from trace_mapper.suite import run_summary_suite
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -92,6 +96,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory for generated summary artifacts.",
     )
 
+    suite_parser = subparsers.add_parser(
+        "summarize-suite",
+        help="Generate comparable reports for multiple production traces.",
+    )
+
+    suite_parser.add_argument(
+        "--config",
+        type=Path,
+        required=True,
+        help="Path to the trace-suite YAML configuration.",
+    )
     return parser
 
 def load_source_jobs(
@@ -196,15 +211,12 @@ def main() -> int:
             cluster_name=args.cluster_name,
         )
 
-        summary_path, distribution_path = write_source_summary(
-            jobs=jobs,
-            supported_gpu_counts=args.supported_gpu_counts,
-            output_dir=args.output_dir,
-        )
-
-        summary = summarize_source_jobs(
-            jobs,
-            supported_gpu_counts=args.supported_gpu_counts,
+        summary, summary_path, distribution_path = (
+            write_source_summary_artifacts(
+                jobs=jobs,
+                supported_gpu_counts=args.supported_gpu_counts,
+                output_dir=args.output_dir,
+            )
         )
 
         print(
@@ -220,6 +232,24 @@ def main() -> int:
         print(
             "Wrote GPU-demand distribution to "
             f"{distribution_path}"
+        )
+
+        return 0
+
+    if args.command == "summarize-suite":
+        outputs = run_summary_suite(args.config)
+
+        print(
+            "Wrote suite CSV to "
+            f"{outputs['suite_csv_path']}"
+        )
+        print(
+            "Wrote suite JSON to "
+            f"{outputs['suite_json_path']}"
+        )
+        print(
+            "Wrote Markdown report to "
+            f"{outputs['markdown_path']}"
         )
 
         return 0

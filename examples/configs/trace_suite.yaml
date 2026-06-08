@@ -1,0 +1,37 @@
+version: 1
+
+# Resolve all relative paths from the repository root.
+root_dir: ../..
+
+supported_gpu_counts:
+  - 1
+  - 2
+
+sources:
+  - name: philly
+    format: philly
+    trace_path: data/raw/philly/cluster_job_log
+
+  - name: earth
+    format: helios
+    cluster_name: earth
+    trace_path: data/raw/helios/earth/cluster_log.csv
+
+  - name: saturn
+    format: helios
+    cluster_name: saturn
+    trace_path: data/raw/helios/saturn/cluster_log.csv
+
+  - name: uranus
+    format: helios
+    cluster_name: uranus
+    trace_path: data/raw/helios/uranus/cluster_log.csv
+
+  - name: venus
+    format: helios
+    cluster_name: venus
+    trace_path: data/raw/helios/venus/cluster_log.csv
+
+output:
+  artifact_dir: outputs/source_summaries
+  markdown_path: docs/trace_characterization.md

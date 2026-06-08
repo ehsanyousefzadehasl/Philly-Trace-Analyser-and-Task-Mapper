@@ -4,6 +4,9 @@ from collections.abc import Iterable
 
 import pandas as pd
 
+import json
+from pathlib import Path
+
 
 REQUIRED_COLUMNS = {
     "source_trace",
@@ -257,3 +260,31 @@ def gpu_demand_distribution(
     )
 
     return counts
+
+
+def write_source_summary_artifacts(
+    *,
+    jobs: pd.DataFrame,
+    supported_gpu_counts: Iterable[int],
+    output_dir: Path,
+) -> tuple[dict, Path, Path]:
+    summary = summarize_source_jobs(
+        jobs,
+        supported_gpu_counts=supported_gpu_counts,
+    )
+    distribution = gpu_demand_distribution(jobs)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    summary_path = output_dir / "source_summary.json"
+    distribution_path = (
+        output_dir / "gpu_demand_distribution.csv"
+    )
+
+    summary_path.write_text(
+        json.dumps(summary, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    distribution.to_csv(distribution_path, index=False)
+
+    return summary, summary_path, distribution_path
