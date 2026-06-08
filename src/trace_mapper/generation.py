@@ -13,6 +13,9 @@ from trace_mapper.selection import select_contiguous_job_window
 from trace_mapper.sources.helios import load_helios_jobs
 from trace_mapper.sources.philly import load_philly_jobs
 
+from trace_mapper.simulation import (
+    simulate_exclusive_execution,
+)
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -168,6 +171,51 @@ def run_generation(config_path: Path) -> dict[str, object]:
 
     trace_output.to_csv(trace_path, index=False)
 
+    execution_trace_path = trace_path.with_name(
+        f"{trace_path.stem}.execution.csv"
+    )
+
+    trace_output[
+        ["submit_time_s", "task_path"]
+    ].to_csv(
+        execution_trace_path,
+        index=False,
+    )
+
+    exclusive_job_metrics_path = trace_path.with_name(
+        f"{trace_path.stem}.exclusive_jobs.csv"
+    )
+
+    exclusive_summary_path = trace_path.with_name(
+        f"{trace_path.stem}.exclusive_summary.json"
+    )
+
+    exclusive_summary = None
+
+    if config.simulation.enabled:
+        exclusive_jobs, exclusive_summary = (
+            simulate_exclusive_execution(
+                trace_output,
+                server_gpu_count=(
+                    config.simulation.server_gpu_count
+                ),
+            )
+        )
+
+        exclusive_jobs.to_csv(
+            exclusive_job_metrics_path,
+            index=False,
+        )
+
+        exclusive_summary_path.write_text(
+            json.dumps(
+                exclusive_summary,
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+
     quantile_distance = pd.to_numeric(
         trace_output["runtime_quantile_distance"],
         errors="raise",
@@ -206,6 +254,12 @@ def run_generation(config_path: Path) -> dict[str, object]:
             "preserve_arrivals": (
                 config.mapping.preserve_arrivals
             ),
+            "simulation": {
+                "enabled": config.simulation.enabled,
+                "server_gpu_count": (
+                    config.simulation.server_gpu_count
+                ),
+            },
         },
         "inputs": {
             "source_trace_path": str(source_path),
@@ -253,7 +307,24 @@ def run_generation(config_path: Path) -> dict[str, object]:
         "output": {
             "trace_path": str(trace_path.resolve()),
             "trace_sha256": sha256_file(trace_path),
+            "execution_trace_path": str(
+                execution_trace_path.resolve()
+            ),
+            "execution_trace_sha256": sha256_file(
+                execution_trace_path
+            ),
+            "exclusive_job_metrics_path": (
+                str(exclusive_job_metrics_path.resolve())
+                if config.simulation.enabled
+                else None
+            ),
+            "exclusive_summary_path": (
+                str(exclusive_summary_path.resolve())
+                if config.simulation.enabled
+                else None
+            ),
         },
+        "exclusive_simulation": exclusive_summary,
     }
 
     manifest_path.write_text(
@@ -267,6 +338,17 @@ def run_generation(config_path: Path) -> dict[str, object]:
 
     return {
         "trace_path": trace_path,
+        "execution_trace_path": execution_trace_path,
         "manifest_path": manifest_path,
+        "exclusive_job_metrics_path": (
+            exclusive_job_metrics_path
+            if config.simulation.enabled
+            else None
+        ),
+        "exclusive_summary_path": (
+            exclusive_summary_path
+            if config.simulation.enabled
+            else None
+        ),
         "mapped_job_count": len(trace_output),
     }

@@ -121,6 +121,10 @@ mapping:
   unsupported_gpu_policy: filter
   preserve_arrivals: true
 
+simulation:
+  enabled: true
+  server_gpu_count: 3
+
 output:
   trace_path: {trace_path}
   manifest_path: {manifest_path}
@@ -136,6 +140,45 @@ output:
             )
             self.assertTrue(trace_path.is_file())
             self.assertTrue(manifest_path.is_file())
+
+
+            execution_trace_path = root / "mapped.execution.csv"
+            exclusive_jobs_path = root / "mapped.exclusive_jobs.csv"
+            exclusive_summary_path = (
+                root / "mapped.exclusive_summary.json"
+            )
+
+            self.assertTrue(execution_trace_path.is_file())
+            self.assertTrue(exclusive_jobs_path.is_file())
+            self.assertTrue(exclusive_summary_path.is_file())
+
+            execution_trace = pd.read_csv(execution_trace_path)
+
+            self.assertEqual(
+                execution_trace.columns.tolist(),
+                ["submit_time_s", "task_path"],
+            )
+            self.assertEqual(len(execution_trace), 3)
+
+            exclusive_summary = json.loads(
+                exclusive_summary_path.read_text(
+                    encoding="utf-8"
+                )
+            )
+
+            self.assertEqual(
+                exclusive_summary["server_gpu_count"],
+                3,
+            )
+            self.assertEqual(
+                exclusive_summary["job_count"],
+                3,
+            )
+            self.assertGreater(
+                exclusive_summary["makespan_s"],
+                0,
+            )
+
 
             mapped = pd.read_csv(trace_path)
 
@@ -186,7 +229,12 @@ output:
                 ),
                 64,
             )
-
+            self.assertEqual(
+                manifest["exclusive_simulation"][
+                    "server_gpu_count"
+                ],
+                3,
+            )
 
 if __name__ == "__main__":
     unittest.main()

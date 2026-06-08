@@ -19,6 +19,10 @@ mapping:
   unsupported_gpu_policy: filter
   preserve_arrivals: true
 
+simulation:
+  enabled: true
+  server_gpu_count: 3
+  
 output:
   trace_path: outputs/generated_traces/philly_seed42_60jobs.csv
   manifest_path: outputs/generated_traces/philly_seed42_60jobs.manifest.json

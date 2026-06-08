@@ -12,6 +12,10 @@ SUPPORTED_GPU_MATCHING = {"exact"}
 SUPPORTED_DURATION_MATCHING = {"nearest_quantile"}
 SUPPORTED_UNSUPPORTED_GPU_POLICIES = {"filter", "error"}
 
+@dataclass(frozen=True)
+class SimulationConfig:
+    enabled: bool
+    server_gpu_count: int
 
 @dataclass(frozen=True)
 class SourceConfig:
@@ -42,6 +46,7 @@ class OutputConfig:
 class GenerationConfig:
     source: SourceConfig
     mapping: MappingConfig
+    simulation: SimulationConfig
     output: OutputConfig
 
 
@@ -144,6 +149,26 @@ def load_generation_config(path: Path) -> GenerationConfig:
     if num_jobs is not None and num_jobs <= 0:
         raise ValueError("num_jobs must be positive when provided")
 
+    simulation_raw = raw.get("simulation", {})
+
+    if not isinstance(simulation_raw, dict):
+        raise ValueError(
+            "Configuration field 'simulation' must be a mapping"
+        )
+
+    simulation_enabled = bool(
+        simulation_raw.get("enabled", True)
+    )
+
+    server_gpu_count = int(
+        simulation_raw.get("server_gpu_count", 1)
+    )
+
+    if server_gpu_count <= 0:
+        raise ValueError(
+            "simulation.server_gpu_count must be positive"
+        )
+
     return GenerationConfig(
         source=SourceConfig(
             format=source_format,
@@ -181,4 +206,8 @@ def load_generation_config(path: Path) -> GenerationConfig:
                 _require_value(output_raw, "manifest_path")
             ),
         ),
+        simulation=SimulationConfig(
+            enabled=simulation_enabled,
+            server_gpu_count=server_gpu_count
+        )
     )
