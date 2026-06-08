@@ -18,6 +18,7 @@ from trace_mapper.summary import (
 
 from trace_mapper.suite import run_summary_suite
 
+from trace_mapper.generation import run_generation
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -51,9 +52,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional root used to convert task paths to portable relative paths.",
     )
 
-    subparsers.add_parser(
+    generate_parser = subparsers.add_parser(
         "generate",
         help="Map production-trace arrivals to profiled workloads.",
+    )
+
+    generate_parser.add_argument(
+        "--config",
+        type=Path,
+        required=True,
+        help="Trace-generation YAML configuration.",
     )
 
     summary_parser = subparsers.add_parser(
@@ -201,7 +209,17 @@ def main() -> int:
         return 0
 
     if args.command == "generate":
-        print("generate: not implemented yet")
+        outputs = run_generation(args.config)
+
+        print(
+            f"Wrote {outputs['mapped_job_count']} mapped jobs to "
+            f"{outputs['trace_path']}"
+        )
+        print(
+            f"Wrote reproducibility manifest to "
+            f"{outputs['manifest_path']}"
+        )
+
         return 0
 
     if args.command == "summarize-source":

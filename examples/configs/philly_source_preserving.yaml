@@ -2,7 +2,7 @@ version: 1
 
 source:
   format: philly
-  trace_path: examples/source_traces/philly/philly_trace_60_tasks.csv
+  trace_path: data/raw/philly/cluster_job_log
   cluster_name: philly
 
 mapping:
@@ -20,5 +20,5 @@ mapping:
   preserve_arrivals: true
 
 output:
-  trace_path: outputs/philly_mapped.csv
-  manifest_path: outputs/philly_mapped.manifest.json
+  trace_path: outputs/generated_traces/philly_seed42_60jobs.csv
+  manifest_path: outputs/generated_traces/philly_seed42_60jobs.manifest.json

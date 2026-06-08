@@ -33,8 +33,19 @@ class CliTests(unittest.TestCase):
         self.assertEqual(str(args.task_root), "/workloads")
 
     def test_generate_command_parses(self) -> None:
-        args = build_parser().parse_args(["generate"])
+        args = build_parser().parse_args(
+            [
+                "generate",
+                "--config",
+                "generation.yaml",
+            ]
+        )
+
         self.assertEqual(args.command, "generate")
+        self.assertEqual(
+            str(args.config),
+            "generation.yaml",
+        )
 
 def test_summarize_source_command_parses(self) -> None:
     args = build_parser().parse_args(
@@ -145,6 +156,7 @@ def test_summarize_philly_writes_artifacts(self) -> None:
             summary["supported_job_fraction"],
             1.0,
         )
+
 
 if __name__ == "__main__":
     unittest.main()
