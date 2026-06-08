@@ -140,3 +140,13 @@ The generated documentation exposes the complete evidence chain used to validate
 - [Raw trace sources and citations](data/README.md)
 
 The fidelity report compares each full eligible source population with its selected 60-job window and mapped executable trace. It reports GPU-demand proportions, runtime-CDF buckets, interarrival behavior, representativeness scores, and suite-level coverage of the available 2-GPU workloads.
+
+
+## License
+
+The source code in this repository is licensed under the
+[Apache License 2.0](LICENSE).
+
+External production traces are not covered by this license. They must be
+downloaded from their original repositories and remain subject to their
+respective licenses and terms.
