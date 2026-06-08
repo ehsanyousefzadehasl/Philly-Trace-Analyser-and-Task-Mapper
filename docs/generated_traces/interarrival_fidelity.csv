@@ -1,0 +1,10 @@
+trace,metric,full_eligible,selected_window,mapped_trace
+Philly,interarrival_p50_s,8.0,8.0,8.0
+Philly,interarrival_p95_s,600.0,600.0,600.0
+Philly,zero_interarrival_fraction,0.0836008391679094,0.05,0.05
+Saturn,interarrival_p50_s,5.0,5.0,5.0
+Saturn,interarrival_p95_s,211.0,204.29999999999993,204.29999999999993
+Saturn,zero_interarrival_fraction,0.2791462092491696,0.31666666666666665,0.31666666666666665
+Venus,interarrival_p50_s,89.0,75.0,75.0
+Venus,interarrival_p95_s,1610.75,1159.4999999999989,1159.4999999999989
+Venus,zero_interarrival_fraction,0.16410681122320936,0.25,0.25

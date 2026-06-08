@@ -1,0 +1,16 @@
+trace,component,distance
+Philly,burst_fraction_distance,0.0336008391679094
+Philly,gpu_demand_distance,0.010091920902526762
+Philly,gpu_service_distance,0.12603312573014414
+Philly,interarrival_distance,0.0
+Philly,runtime_cdf_distance,0.03483642123532929
+Saturn,burst_fraction_distance,0.02085379075083038
+Saturn,gpu_demand_distance,0.03397623141568783
+Saturn,gpu_service_distance,0.08752236163354929
+Saturn,interarrival_distance,0.023165318670979988
+Saturn,runtime_cdf_distance,0.03598701428739129
+Venus,burst_fraction_distance,0.06922652211012398
+Venus,gpu_demand_distance,0.023510515484615788
+Venus,gpu_service_distance,0.11044891024500628
+Venus,interarrival_distance,0.060235158211699655
+Venus,runtime_cdf_distance,0.05066066857400994
