@@ -71,6 +71,13 @@ def run_generation(config_path: Path) -> dict[str, object]:
         config.mapping.workload_catalog_path.resolve()
     )
 
+    maximum_gpu_fraction_deviation=(
+        config.mapping.maximum_gpu_fraction_deviation
+    ),
+    maximum_runtime_cdf_deviation=(
+        config.mapping.maximum_runtime_cdf_deviation
+    ),
+
     if not source_path.is_file():
         raise FileNotFoundError(
             f"Source trace does not exist: {source_path}"
@@ -129,6 +136,12 @@ def run_generation(config_path: Path) -> dict[str, object]:
                 supported_gpu_counts=supported_gpu_counts,
                 minimum_jobs_by_gpu_count=(
                     minimum_jobs_by_gpu_count
+                ),
+                maximum_gpu_fraction_deviation=(
+                    config.mapping.maximum_gpu_fraction_deviation
+                ),
+                maximum_runtime_cdf_deviation=(
+                    config.mapping.maximum_runtime_cdf_deviation
                 ),
             )
         )

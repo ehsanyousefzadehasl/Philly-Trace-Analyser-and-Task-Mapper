@@ -315,9 +315,25 @@ def generate_representative_fidelity_report(
                 }
             )
 
-        for component, value in (
-            representative["components"].items()
-        ):
+        component_values = representative["components"]
+
+        expected_components = [
+            "gpu_demand_distance",
+            "runtime_cdf_distance",
+            "interarrival_distance",
+            "burst_fraction_distance",
+            "gpu_service_distance",
+        ]
+
+        for component in expected_components:
+            value = component_values.get(component)
+
+            if not isinstance(value, (int, float)):
+                raise ValueError(
+                    f"{trace_name}: representativeness component "
+                    f"'{component}' must be numeric"
+                )
+
             score_rows.append(
                 {
                     "trace": trace_name,

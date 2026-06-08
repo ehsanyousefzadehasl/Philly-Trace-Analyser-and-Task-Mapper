@@ -335,6 +335,8 @@ def select_representative_job_window(
     supported_gpu_counts: Iterable[int] = (1, 2),
     minimum_jobs_by_gpu_count: Mapping[int, int] | None = None,
     weights: Mapping[str, float] | None = None,
+    maximum_gpu_fraction_deviation: float | None = None,
+    maximum_runtime_cdf_deviation: float | None = None,
 ) -> tuple[pd.DataFrame, dict]:
     missing = SELECTION_REQUIRED_COLUMNS - set(
         source_jobs.columns
@@ -389,6 +391,26 @@ def select_representative_job_window(
             "The sum of minimum_jobs_by_gpu_count exceeds "
             "num_jobs"
         )
+
+
+    if (
+        maximum_gpu_fraction_deviation is not None
+        and not 0.0 <= maximum_gpu_fraction_deviation <= 1.0
+    ):
+        raise ValueError(
+            "maximum_gpu_fraction_deviation must be "
+            "between 0 and 1"
+        )
+
+    if (
+        maximum_runtime_cdf_deviation is not None
+        and not 0.0 <= maximum_runtime_cdf_deviation <= 1.0
+    ):
+        raise ValueError(
+            "maximum_runtime_cdf_deviation must be "
+            "between 0 and 1"
+        )
+    
 
     jobs = source_jobs.copy()
 
@@ -507,6 +529,10 @@ def select_representative_job_window(
         index=eligible.index,
     )
 
+
+    gpu_fraction_deviations: list[pd.Series] = []
+
+
     rolling_service_by_gpu: dict[int, pd.Series] = {}
 
     total_service = (
@@ -539,9 +565,14 @@ def select_representative_job_window(
             ][str(gpu_count)]
         )
 
-        gpu_demand_distance += (
+        gpu_fraction_deviation = (
             rolling_fraction - target_fraction
         ).abs()
+
+        gpu_demand_distance += gpu_fraction_deviation
+        gpu_fraction_deviations.append(
+            gpu_fraction_deviation
+        )
 
         required_minimum = minimum_counts.get(
             gpu_count,
@@ -567,11 +598,19 @@ def select_representative_job_window(
 
     gpu_demand_distance *= 0.5
 
+    maximum_gpu_deviation = pd.concat(
+        gpu_fraction_deviations,
+        axis=1,
+    ).max(axis=1)
+
     # Runtime-CDF distance.
     runtime_cdf_distance = pd.Series(
         0.0,
         index=eligible.index,
     )
+
+    runtime_cdf_deviations: list[pd.Series] = []
+
 
     for label, threshold_s in (
         RUNTIME_THRESHOLDS_S.items()
@@ -593,13 +632,23 @@ def select_representative_job_window(
             target_profile["runtime_cdf"][label]
         )
 
-        runtime_cdf_distance += (
+        runtime_deviation = (
             rolling_fraction - target_fraction
         ).abs()
+
+        runtime_cdf_distance += runtime_deviation
+        runtime_cdf_deviations.append(
+            runtime_deviation
+        )
 
     runtime_cdf_distance /= len(
         RUNTIME_THRESHOLDS_S
     )
+
+    maximum_runtime_deviation = pd.concat(
+        runtime_cdf_deviations,
+        axis=1,
+    ).max(axis=1)
 
     # Interarrival behavior.
     interarrivals = eligible[
@@ -709,6 +758,14 @@ def select_representative_job_window(
         gpu_service_distance
     )
 
+    metric_frame["maximum_gpu_fraction_deviation"] = (
+        maximum_gpu_deviation
+    )
+
+    metric_frame["maximum_runtime_cdf_deviation"] = (
+        maximum_runtime_deviation
+    )
+
     metric_frame["total_score"] = (
         normalized_weights["gpu_demand"]
         * metric_frame["gpu_demand_distance"]
@@ -731,14 +788,55 @@ def select_representative_job_window(
         "total_score"
     ].notna()
 
+    if maximum_gpu_fraction_deviation is not None:
+        valid_window &= (
+            metric_frame[
+                "maximum_gpu_fraction_deviation"
+            ]
+            <= maximum_gpu_fraction_deviation
+        )
+
+    if maximum_runtime_cdf_deviation is not None:
+        valid_window &= (
+            metric_frame[
+                "maximum_runtime_cdf_deviation"
+            ]
+            <= maximum_runtime_cdf_deviation
+        )
+
     valid_end_indices = metric_frame.index[
         valid_window
     ]
 
     if len(valid_end_indices) == 0:
+        eligible_metrics = metric_frame.loc[
+            metric_frame["total_score"].notna()
+        ]
+
+        best_gpu_deviation = float(
+            eligible_metrics[
+                "maximum_gpu_fraction_deviation"
+            ].min()
+        )
+
+        best_runtime_deviation = float(
+            eligible_metrics[
+                "maximum_runtime_cdf_deviation"
+            ].min()
+        )
+
         raise ValueError(
-            "No representative window satisfies "
-            f"minimum_jobs_by_gpu_count={minimum_counts}"
+            "No representative window satisfies the configured "
+            "constraints. "
+            f"minimum_jobs_by_gpu_count={minimum_counts}, "
+            f"maximum_gpu_fraction_deviation="
+            f"{maximum_gpu_fraction_deviation}, "
+            f"maximum_runtime_cdf_deviation="
+            f"{maximum_runtime_cdf_deviation}. "
+            f"Best observed GPU deviation="
+            f"{best_gpu_deviation:.4f}; "
+            f"best observed runtime-CDF deviation="
+            f"{best_runtime_deviation:.4f}."
         )
 
     best_end_index = int(
@@ -882,6 +980,24 @@ def select_representative_job_window(
                 ),
             },
             "weights": normalized_weights,
+            "acceptance_constraints": {
+                "maximum_gpu_fraction_deviation": (
+                    maximum_gpu_fraction_deviation
+                ),
+                "maximum_runtime_cdf_deviation": (
+                    maximum_runtime_cdf_deviation
+                ),
+            },
+            "selected_maximum_gpu_fraction_deviation": float(
+                best_metrics[
+                    "maximum_gpu_fraction_deviation"
+                ]
+            ),
+            "selected_maximum_runtime_cdf_deviation": float(
+                best_metrics[
+                    "maximum_runtime_cdf_deviation"
+                ]
+            ),
             "target_profile": target_profile,
             "selected_profile": candidate_profile,
         },

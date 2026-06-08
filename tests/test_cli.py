@@ -186,6 +186,24 @@ def test_report_generation_suite_parses(self) -> None:
         str(args.output_dir),
         "docs/generated_traces",
     )
-    
+
+def test_run_pipeline_parses(self) -> None:
+    args = build_parser().parse_args(
+        [
+            "run-pipeline",
+            "--config",
+            "examples/configs/full_pipeline.yaml",
+        ]
+    )
+
+    self.assertEqual(
+        args.command,
+        "run-pipeline",
+    )
+    self.assertEqual(
+        str(args.config),
+        "examples/configs/full_pipeline.yaml",
+    )
+
 if __name__ == "__main__":
     unittest.main()
