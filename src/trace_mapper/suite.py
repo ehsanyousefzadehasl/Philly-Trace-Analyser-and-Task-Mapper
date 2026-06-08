@@ -7,6 +7,12 @@ from typing import Any
 import pandas as pd
 import yaml
 
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+
 from trace_mapper.sources.helios import load_helios_jobs
 from trace_mapper.sources.philly import load_philly_jobs
 from trace_mapper.summary import write_source_summary_artifacts
@@ -178,6 +184,128 @@ def _load_source(source: dict[str, Any]) -> pd.DataFrame:
         cluster_name=source["cluster_name"],
     )
 
+def _write_suite_figures(
+    summary_df: pd.DataFrame,
+    *,
+    figure_dir: Path,
+) -> dict[str, Path]:
+    figure_dir.mkdir(parents=True, exist_ok=True)
+
+    frame = summary_df.copy()
+    frame["label"] = (
+        frame["source_cluster"]
+        .astype(str)
+        .str.title()
+    )
+
+    coverage_path = figure_dir / "supported_coverage.png"
+
+    x = list(range(len(frame)))
+    width = 0.38
+
+    figure, axis = plt.subplots(figsize=(8, 4.5))
+    axis.bar(
+        [value - width / 2 for value in x],
+        frame["supported_job_fraction"] * 100.0,
+        width=width,
+        label="Job-count coverage",
+    )
+    axis.bar(
+        [value + width / 2 for value in x],
+        frame["supported_gpu_service_time_fraction"] * 100.0,
+        width=width,
+        label="GPU-service coverage",
+    )
+    axis.set_xticks(x)
+    axis.set_xticklabels(frame["label"])
+    axis.set_ylabel("Coverage (%)")
+    axis.set_title("Coverage of 1–2 GPU jobs")
+    axis.legend()
+    figure.tight_layout()
+    figure.savefig(coverage_path, dpi=200)
+    plt.close(figure)
+
+    gpu_mix_path = figure_dir / "gpu_demand_mix.png"
+
+    one_gpu = frame["single_gpu_job_fraction"] * 100.0
+    two_gpu = frame["two_gpu_job_fraction"] * 100.0
+    other_gpu = 100.0 - one_gpu - two_gpu
+
+    figure, axis = plt.subplots(figsize=(8, 4.5))
+    axis.bar(frame["label"], one_gpu, label="1 GPU")
+    axis.bar(
+        frame["label"],
+        two_gpu,
+        bottom=one_gpu,
+        label="2 GPUs",
+    )
+    axis.bar(
+        frame["label"],
+        other_gpu,
+        bottom=one_gpu + two_gpu,
+        label="More than 2 GPUs",
+    )
+    axis.set_ylabel("Jobs (%)")
+    axis.set_title("GPU-demand composition")
+    axis.legend()
+    figure.tight_layout()
+    figure.savefig(gpu_mix_path, dpi=200)
+    plt.close(figure)
+
+    runtime_path = figure_dir / "runtime_percentiles.png"
+
+    figure, axis = plt.subplots(figsize=(8, 4.5))
+    axis.bar(
+        [value - width / 2 for value in x],
+        frame["all_duration_p50_s"] / 3600.0,
+        width=width,
+        label="p50",
+    )
+    axis.bar(
+        [value + width / 2 for value in x],
+        frame["all_duration_p95_s"] / 3600.0,
+        width=width,
+        label="p95",
+    )
+    axis.set_xticks(x)
+    axis.set_xticklabels(frame["label"])
+    axis.set_ylabel("Runtime (hours)")
+    axis.set_title("Source-job runtime percentiles")
+    axis.legend()
+    figure.tight_layout()
+    figure.savefig(runtime_path, dpi=200)
+    plt.close(figure)
+
+    queue_path = figure_dir / "queue_percentiles.png"
+
+    figure, axis = plt.subplots(figsize=(8, 4.5))
+    axis.bar(
+        [value - width / 2 for value in x],
+        frame["all_queue_wait_p50_s"] / 60.0,
+        width=width,
+        label="p50",
+    )
+    axis.bar(
+        [value + width / 2 for value in x],
+        frame["all_queue_wait_p95_s"] / 60.0,
+        width=width,
+        label="p95",
+    )
+    axis.set_xticks(x)
+    axis.set_xticklabels(frame["label"])
+    axis.set_ylabel("Queue time (minutes)")
+    axis.set_title("Source-job queue-time percentiles")
+    axis.legend()
+    figure.tight_layout()
+    figure.savefig(queue_path, dpi=200)
+    plt.close(figure)
+
+    return {
+        "coverage_path": coverage_path,
+        "gpu_mix_path": gpu_mix_path,
+        "runtime_path": runtime_path,
+        "queue_path": queue_path,
+    }
 
 def _markdown_report(rows: list[dict]) -> str:
     lines = [
@@ -220,6 +348,31 @@ def _markdown_report(rows: list[dict]) -> str:
 
     lines.extend(
         [
+            "",
+            "## Supported Testbed Coverage",
+            "",
+            "![Coverage of supported GPU demands]"
+            "(trace_characterization/supported_coverage.png)",
+            "",
+            "Job-count coverage measures the fraction of jobs that request "
+            "one or two GPUs. GPU-service coverage weights each job by its "
+            "GPU demand and runtime, showing how much total GPU work the "
+            "supported subset represents.",
+            "",
+            "## GPU-Demand Composition",
+            "",
+            "![GPU-demand composition]"
+            "(trace_characterization/gpu_demand_mix.png)",
+            "",
+            "## Runtime Distribution",
+            "",
+            "![Runtime percentiles]"
+            "(trace_characterization/runtime_percentiles.png)",
+            "",
+            "## Queue-Time Distribution",
+            "",
+            "![Queue-time percentiles]"
+            "(trace_characterization/queue_percentiles.png)",
             "",
             "Raw production traces are not distributed with this "
             "repository. See `data/README.md` for their sources, "
@@ -280,8 +433,19 @@ def run_summary_suite(config_path: Path) -> dict[str, Path]:
         encoding="utf-8",
     )
 
+    figure_dir = (
+        markdown_path.parent
+        / markdown_path.stem
+    )
+
+    figure_paths = _write_suite_figures(
+        summary_df,
+        figure_dir=figure_dir,
+    )
+
     return {
         "suite_csv_path": suite_csv_path,
         "suite_json_path": suite_json_path,
         "markdown_path": markdown_path,
+        **figure_paths,
     }

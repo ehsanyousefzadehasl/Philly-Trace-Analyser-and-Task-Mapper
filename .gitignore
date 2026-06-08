@@ -11,3 +11,6 @@ __pycache__/
 
 # Downloaded SenseTime Helios production traces
 data/raw/helios/
+
+# Python packaging metadata
+*.egg-info/

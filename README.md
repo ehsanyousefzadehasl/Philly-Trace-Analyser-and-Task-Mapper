@@ -1,123 +1,94 @@
-# Philly Trace Analyser and Task Mapper
+# DL Trace Mapper
 
-This repository analyzes Philly trace and also makes it possible to map tasks to a window of tasks submitted to a system based on the pattern available in the Philly trace.
+DL Trace Mapper generates reproducible deep-learning workload traces by mapping production GPU-cluster jobs to locally profiled executable workloads.
 
-## Goal
-To provide a realistic pattern of coming tasks into a deep learning training system for having more realistic evaluation of the proposed schedulers and resource managers.
+It supports Microsoft Philly traces, SenseTime Helios traces, workload-catalog construction, reproducible trace-window selection, GPU-demand-aware workload mapping, exclusive-execution estimation, and Markdown/figure reports.
 
-## Philly Trace Sampler
-This script extracts a sequence of submitted jobs from the Philly cluster trace, filters out failed jobs, and writes their inter-arrival (wait) times to a CSV file. It's useful for generating realistic workload traces for scheduling or simulation experiments.
-
-### Usage
-```bash
-python philly_trace_sampler.py --num_samples 60
-```
-
-The output CSV file contains a sequence of job submission gaps (inter-arrival times) sampled from the Philly cluster trace.
-
-
-Each row represents one job:
-- **Column 1** (`waiting_time`): Time in **seconds** since the previous job was submitted.
-  - The first job has a waiting time of `0`.
-- **Column 2** (`tasks`): used as a placeholder (e.g., for job count).
-
-
-
-This file can be used to:
-- Simulate job arrival patterns in workload replay or scheduling experiments.
-- Analyze burstiness or submission frequency.
-
-
-### Waiting Time Histogram Plotter
-
-This script reads a CSV trace file containing inter-arrival (waiting) times between job submissions (e.g., generated from the Philly trace) and visualizes their distribution using a histogram.
-
-## What It Does
-- Loads a CSV file where each row represents:
-  - Column 1: `waiting_time` (in seconds)
-  - Column 2: Placeholder value (`1`)
-- Computes and prints the **total accumulated waiting time** across all jobs.
-- Plots a histogram of `waiting_time` values to reveal patterns such as:
-  - Burstiness
-  - Gaps between submissions
-- Saves the histogram to `waiting_time_histogram.png`.
-
-## Usage
+## Installation
 
 ```bash
-python plot_waiting_time_histogram.py --csv_file philly_trace_200_tasks.csv
+git clone https://github.com/ehsanyousefzadehasl/Philly-Trace-Analyser-and-Task-Mapper.git
+cd Philly-Trace-Analyser-and-Task-Mapper
+python -m pip install -e .
 ```
 
+Verify the installation:
 
-An example of its output:
-
-![Plot](waiting_time_histogramphilly_trace_200_tasks.csv.png)
-
-
-
-## Philly Scenario Mapper
-
-This script generates a shell script (`philly_scenario.sh`) that simulates job submissions over time based on a Philly cluster trace. It uses real inter-arrival times from a CSV file and randomly samples synthetic job commands to replay a realistic mixed workload.
-
-### 🔧 What It Does
-
-- Reads a CSV trace file (`philly_trace_90_tasks.csv`) containing:
-  - **Waiting times** between job submissions (in seconds)
-  - **Number of tasks** to submit at each step (usually 1 per row)
-- For each row in the trace:
-  - Writes a `sleep <duration>` command
-  - Randomly selects a job command from one of three pools:
-    - **Short jobs (< 10 min)** — 45% chance
-    - **Medium jobs (10–60 min)** — 45% chance
-    - **Long jobs (> 1 hr, 2 GPUs)** — 10% chance
-- Outputs a script (`philly_scenario.sh`) that can be executed to simulate job arrivals in real time.
-
-> 💡 **Note**:  
-> The selection percentages (45%, 45%, 10%) are hardcoded in the script. You can easily change these values in the `weights` argument of the `random.choices(...)` call to better reflect your target workload mix (e.g., more long jobs, fewer short bursts, etc.).
-
-
-How to use it: 
-
-```bash 
-python generate_philly_scenario.py --csv_file philly_trace_90_tasks.csv
+```bash
+trace-mapper --help
 ```
 
+## Quick Start
 
-## Philly Trace Execution Simulator & Visualizer
+Build a workload catalog:
 
-This script simulates the execution of jobs from a trace script (e.g., `philly_scenario.sh`) over a GPU cluster, and produces runtime metrics and visualizations. It estimates **waiting time**, **execution time**, and **completion time** for each job, assuming a fixed number of GPUs and known task durations.
+```bash
+trace-mapper build-catalog \
+  --profiles /path/to/solo_profile_results_1gpu.csv \
+             /path/to/solo_profile_results_2gpu.csv \
+  --task-root /path/to/project/root \
+  --output outputs/workload_catalog.csv
+```
 
-### 🔧 What It Does
+Characterize all configured production traces:
 
-- **Parses a shell script** (`philly_scenario.sh`) with `sleep` and job submission lines.
-- Simulates job scheduling over a fixed number of GPUs (default: 4).
-- Uses predefined execution times for each job (single-GPU or 2-GPU jobs).
-- Calculates for each job:
-  - **Waiting time** (how long it waits to be scheduled)
-  - **Execution time** (how long it runs)
-  - **Completion time**
-- Computes **end-to-end simulation time** (in minutes).
-- Generates a **stacked bar chart** of job waiting vs. execution times.
+```bash
+trace-mapper summarize-suite \
+  --config examples/configs/trace_suite.yaml
+```
 
-### 📈 Output
+Generate a mapped trace:
 
-- Printed metrics:
-  - Average waiting time
-  - Average execution time
-  - Average completion time
-  - Total (end-to-end) runtime
+```bash
+trace-mapper generate \
+  --config examples/configs/philly_source_preserving.yaml
+```
 
-- A saved plot: `job_metrics.png`  
-  Showing job timelines as stacked bars (waiting time + execution time).
+Generate its report:
 
+```bash
+trace-mapper report-generation \
+  --manifest outputs/generated_traces/philly_seed42_60jobs.manifest.json
+```
 
-An example of its output:
+## Documentation
 
-![Plot](job_metrics.png)
+- [Raw trace setup, provenance, licenses, and citations](data/README.md)
+- [Production-trace characterization](docs/trace_characterization.md)
+- [Generated-trace comparison](docs/generated_traces/generated_trace_comparison.md)
 
+Example configurations:
 
-### 📂 Input
+- [Philly generation](examples/configs/philly_source_preserving.yaml)
+- [Saturn generation](examples/configs/saturn_source_preserving.yaml)
+- [Venus generation](examples/configs/venus_source_preserving.yaml)
+- [Multi-trace characterization](examples/configs/trace_suite.yaml)
 
-- **Shell trace script** (`philly_scenario.sh`)  
-  Must contain lines like:
+## Generated Artifacts
 
+A generation run produces:
+
+```text
+<name>.csv                    # Enriched trace with provenance
+<name>.execution.csv          # Minimal submit_time_s,task_path trace
+<name>.manifest.json          # Reproducibility metadata and hashes
+<name>.exclusive_jobs.csv     # Per-job exclusive simulation
+<name>.exclusive_summary.json # Aggregate exclusive simulation
+```
+
+The execution CSV is scheduler-independent and contains only:
+
+```text
+submit_time_s,task_path
+```
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -v
+python -m compileall -q src tests
+```
+
+## Scope
+
+The included configurations target server-level experiments with 1-GPU and 2-GPU jobs. Larger GPU demands can be enabled when the workload catalog and target testbed support them. Exclusive-execution results are planning estimates, not measured scheduler outcomes.

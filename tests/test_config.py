@@ -28,6 +28,8 @@ mapping:
   duration_matching: nearest_quantile
   unsupported_gpu_policy: filter
   preserve_arrivals: true
+  minimum_jobs_by_gpu_count:
+    2: 2
 
 output:
   trace_path: mapped.csv
@@ -50,6 +52,10 @@ output:
             self.assertEqual(
                 config.mapping.supported_gpu_counts,
                 (1, 2),
+            )
+            self.assertEqual(
+                config.mapping.minimum_jobs_by_gpu_count,
+                ((2, 2),),
             )
             self.assertTrue(config.mapping.preserve_arrivals)
 

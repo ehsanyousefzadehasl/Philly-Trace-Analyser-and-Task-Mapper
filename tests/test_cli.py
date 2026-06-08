@@ -33,8 +33,19 @@ class CliTests(unittest.TestCase):
         self.assertEqual(str(args.task_root), "/workloads")
 
     def test_generate_command_parses(self) -> None:
-        args = build_parser().parse_args(["generate"])
+        args = build_parser().parse_args(
+            [
+                "generate",
+                "--config",
+                "generation.yaml",
+            ]
+        )
+
         self.assertEqual(args.command, "generate")
+        self.assertEqual(
+            str(args.config),
+            "generation.yaml",
+        )
 
 def test_summarize_source_command_parses(self) -> None:
     args = build_parser().parse_args(
@@ -146,5 +157,35 @@ def test_summarize_philly_writes_artifacts(self) -> None:
             1.0,
         )
 
+def test_report_generation_suite_parses(self) -> None:
+    args = build_parser().parse_args(
+        [
+            "report-generation-suite",
+            "--manifests",
+            "philly.json",
+            "saturn.json",
+            "venus.json",
+            "--output-dir",
+            "docs/generated_traces",
+        ]
+    )
+
+    self.assertEqual(
+        args.command,
+        "report-generation-suite",
+    )
+    self.assertEqual(
+        [str(path) for path in args.manifests],
+        [
+            "philly.json",
+            "saturn.json",
+            "venus.json",
+        ],
+    )
+    self.assertEqual(
+        str(args.output_dir),
+        "docs/generated_traces",
+    )
+    
 if __name__ == "__main__":
     unittest.main()

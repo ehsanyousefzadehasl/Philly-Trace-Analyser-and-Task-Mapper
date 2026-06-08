@@ -1,9 +1,9 @@
 version: 1
 
 source:
-  format: philly
-  trace_path: data/raw/philly/cluster_job_log
-  cluster_name: philly
+  format: helios
+  trace_path: data/raw/helios/venus/cluster_log.csv
+  cluster_name: venus
 
 mapping:
   workload_catalog_path: outputs/workload_catalog.csv
@@ -15,7 +15,7 @@ mapping:
     - 2
 
   minimum_jobs_by_gpu_count:
-    2: 2
+    2: 1
 
   gpu_demand_matching: exact
   duration_matching: nearest_quantile
@@ -25,7 +25,7 @@ mapping:
 simulation:
   enabled: true
   server_gpu_count: 3
-  
+
 output:
-  trace_path: outputs/generated_traces/philly_seed42_60jobs.csv
-  manifest_path: outputs/generated_traces/philly_seed42_60jobs.manifest.json
+  trace_path: outputs/generated_traces/venus_seed42_60jobs.csv
+  manifest_path: outputs/generated_traces/venus_seed42_60jobs.manifest.json
