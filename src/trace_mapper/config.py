@@ -29,6 +29,7 @@ class MappingConfig:
     workload_catalog_path: Path
     seed: int
     num_jobs: int | None
+    selection_method: str
     supported_gpu_counts: tuple[int, ...]
     gpu_demand_matching: str
     duration_matching: str
@@ -199,6 +200,24 @@ def load_generation_config(path: Path) -> GenerationConfig:
                 "num_jobs"
             )
 
+    selection_method = str(
+        mapping_raw.get(
+            "selection_method",
+            "random",
+        )
+    ).strip().lower()
+
+    allowed_selection_methods = {
+        "random",
+        "representative",
+    }
+
+    if selection_method not in allowed_selection_methods:
+        raise ValueError(
+            "mapping.selection_method must be one of: "
+            f"{sorted(allowed_selection_methods)}"
+        )
+
     simulation_raw = raw.get("simulation", {})
 
     if not isinstance(simulation_raw, dict):
@@ -240,6 +259,7 @@ def load_generation_config(path: Path) -> GenerationConfig:
             ),
             seed=int(mapping_raw.get("seed", 42)),
             num_jobs=num_jobs,
+            selection_method=selection_method,
             supported_gpu_counts=supported_gpu_counts,
             gpu_demand_matching=gpu_demand_matching,
             duration_matching=duration_matching,

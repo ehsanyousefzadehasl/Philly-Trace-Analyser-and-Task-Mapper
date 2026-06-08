@@ -21,7 +21,8 @@ mapping:
   duration_matching: nearest_quantile
   unsupported_gpu_policy: filter
   preserve_arrivals: true
-
+  selection_method: representative
+  
 simulation:
   enabled: true
   server_gpu_count: 3
