@@ -160,6 +160,43 @@ def run_generation(config_path: Path) -> dict[str, object]:
 
     catalog = pd.read_csv(catalog_path)
 
+    catalog_workload_count_before_memory_filter = len(catalog)
+
+    maximum_peak_memory_per_gpu_mib = (
+        config.mapping.maximum_peak_memory_per_gpu_mib
+    )
+
+    if maximum_peak_memory_per_gpu_mib is None:
+        catalog_workload_count_after_memory_filter = len(catalog)
+    else:
+        memory_column = "measured_peak_memory_per_gpu_mib"
+
+        if memory_column not in catalog.columns:
+            raise ValueError(
+                "The workload catalog is missing the required "
+                f"memory column: {memory_column}"
+            )
+
+        memory_values = pd.to_numeric(
+            catalog[memory_column],
+            errors="coerce",
+        )
+
+        catalog_workload_count_after_memory_filter = int(
+            (
+                memory_values.notna()
+                & (
+                    memory_values
+                    <= maximum_peak_memory_per_gpu_mib
+                )
+            ).sum()
+        )
+
+    catalog_workload_count_excluded_by_memory = (
+        catalog_workload_count_before_memory_filter
+        - catalog_workload_count_after_memory_filter
+    )
+
     mapped = map_jobs_to_workloads(
         selected_jobs,
         catalog,
@@ -302,6 +339,9 @@ def run_generation(config_path: Path) -> dict[str, object]:
             "preserve_arrivals": (
                 config.mapping.preserve_arrivals
             ),
+            "maximum_peak_memory_per_gpu_mib": (
+                maximum_peak_memory_per_gpu_mib
+            ),
             "simulation": {
                 "enabled": config.simulation.enabled,
                 "server_gpu_count": (
@@ -328,6 +368,15 @@ def run_generation(config_path: Path) -> dict[str, object]:
         },
         "selection": selection_metadata,
         "mapping": {
+            "catalog_workload_count_before_memory_filter": int(
+                catalog_workload_count_before_memory_filter
+            ),
+            "catalog_workload_count_after_memory_filter": int(
+                catalog_workload_count_after_memory_filter
+            ),
+            "catalog_workload_count_excluded_by_memory": int(
+                catalog_workload_count_excluded_by_memory
+            ),
             "mapped_job_count": int(len(trace_output)),
             "unique_workload_count": int(
                 trace_output[
