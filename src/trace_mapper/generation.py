@@ -164,6 +164,9 @@ def run_generation(config_path: Path) -> dict[str, object]:
         selected_jobs,
         catalog,
         supported_gpu_counts=supported_gpu_counts,
+        maximum_peak_memory_per_gpu_mib=(
+            config.mapping.maximum_peak_memory_per_gpu_mib
+        ),
     )
 
     trace_columns = [

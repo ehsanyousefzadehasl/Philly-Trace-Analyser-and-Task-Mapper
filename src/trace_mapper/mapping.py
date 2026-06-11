@@ -73,6 +73,7 @@ def map_jobs_to_workloads(
     workload_catalog: pd.DataFrame,
     *,
     supported_gpu_counts: tuple[int, ...] = (1, 2),
+    maximum_peak_memory_per_gpu_mib: float | None = None,
 ) -> pd.DataFrame:
     _validate_columns(
         source_jobs,
@@ -122,6 +123,35 @@ def map_jobs_to_workloads(
         errors="raise",
     )
 
+    if maximum_peak_memory_per_gpu_mib is not None:
+        if maximum_peak_memory_per_gpu_mib <= 0:
+            raise ValueError(
+                "maximum_peak_memory_per_gpu_mib must be positive"
+            )
+
+        memory_column = (
+            "measured_peak_memory_per_gpu_mib"
+        )
+
+        if memory_column not in catalog.columns:
+            raise ValueError(
+                "The workload catalog is missing the required "
+                f"memory column: {memory_column}"
+            )
+
+        catalog[memory_column] = pd.to_numeric(
+            catalog[memory_column],
+            errors="coerce",
+        )
+
+        catalog = catalog.loc[
+            catalog[memory_column].notna()
+            & (
+                catalog[memory_column]
+                <= maximum_peak_memory_per_gpu_mib
+            )
+        ].copy()
+
     jobs = jobs.loc[
         jobs["source_num_gpus"].isin(supported_gpu_counts)
     ].copy()
@@ -136,8 +166,15 @@ def map_jobs_to_workloads(
         )
 
     if catalog.empty:
+        if maximum_peak_memory_per_gpu_mib is None:
+            raise ValueError(
+                "No workloads remain after GPU-demand filtering"
+            )
+
         raise ValueError(
-            "No workloads remain after GPU-demand filtering"
+            "No workloads remain after GPU-demand and "
+            "per-GPU memory filtering; limit="
+            f"{maximum_peak_memory_per_gpu_mib} MiB"
         )
 
     source_gpu_counts = set(jobs["source_num_gpus"].unique())
