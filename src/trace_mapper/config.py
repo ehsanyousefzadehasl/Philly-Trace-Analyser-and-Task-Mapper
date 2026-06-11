@@ -27,6 +27,7 @@ class SourceConfig:
 @dataclass(frozen=True)
 class MappingConfig:
     workload_catalog_path: Path
+    maximum_peak_memory_per_gpu_mib: float | None
     seed: int
     num_jobs: int | None
     selection_method: str
@@ -254,7 +255,25 @@ def load_generation_config(path: Path) -> GenerationConfig:
             raise ValueError(
                 f"mapping.{field_name} must be between 0 and 1"
             )
-    
+
+    maximum_peak_memory_per_gpu_raw = mapping_raw.get(
+        "maximum_peak_memory_per_gpu_mib"
+    )
+
+    maximum_peak_memory_per_gpu_mib = (
+        None
+        if maximum_peak_memory_per_gpu_raw is None
+        else float(maximum_peak_memory_per_gpu_raw)
+    )
+
+    if (
+        maximum_peak_memory_per_gpu_mib is not None
+        and maximum_peak_memory_per_gpu_mib <= 0
+    ):
+        raise ValueError(
+            "mapping.maximum_peak_memory_per_gpu_mib "
+            "must be positive"
+        )
     simulation_raw = raw.get("simulation", {})
 
     if not isinstance(simulation_raw, dict):
@@ -293,6 +312,9 @@ def load_generation_config(path: Path) -> GenerationConfig:
                     mapping_raw,
                     "workload_catalog_path",
                 )
+            ),
+            maximum_peak_memory_per_gpu_mib=(
+                maximum_peak_memory_per_gpu_mib
             ),
             seed=int(mapping_raw.get("seed", 42)),
             num_jobs=num_jobs,
