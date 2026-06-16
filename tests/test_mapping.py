@@ -146,7 +146,66 @@ class WorkloadMappingTests(unittest.TestCase):
                 catalog_without_two_gpu,
                 supported_gpu_counts=(1, 2),
             )
+    def test_filters_catalog_by_per_gpu_memory_limit(
+        self,
+    ) -> None:
+        catalog = self.catalog.copy()
 
+        catalog[
+            "measured_peak_memory_per_gpu_mib"
+        ] = [
+            4000.0,   # short-1gpu: feasible
+            12000.0,  # middle-1gpu: excluded
+            8000.0,   # long-1gpu: feasible
+            7000.0,   # two-gpu: feasible per GPU
+        ]
+
+        mapped = map_jobs_to_workloads(
+            self.source_jobs,
+            catalog,
+            supported_gpu_counts=(1, 2),
+            maximum_peak_memory_per_gpu_mib=10752,
+        )
+
+        mapped_ids = set(mapped["mapped_workload_id"])
+
+        self.assertNotIn(
+            catalog.iloc[1]["workload_id"],
+            mapped_ids,
+        )
+
+        selected_memory = mapped[
+            "mapped_workload_id"
+        ].map(
+            catalog.set_index("workload_id")[
+                "measured_peak_memory_per_gpu_mib"
+            ]
+        )
+
+        self.assertTrue(
+            (selected_memory <= 10752).all()
+        )
+
+    def test_memory_limit_rejects_missing_memory_column(
+        self,
+    ) -> None:
+        catalog = self.catalog.drop(
+            columns=[
+                "measured_peak_memory_per_gpu_mib"
+            ],
+            errors="ignore",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "measured_peak_memory_per_gpu_mib",
+        ):
+            map_jobs_to_workloads(
+                self.source_jobs,
+                catalog,
+                supported_gpu_counts=(1, 2),
+                maximum_peak_memory_per_gpu_mib=10752,
+            )
 
 if __name__ == "__main__":
     unittest.main()
